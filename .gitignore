@@ -1,0 +1,48 @@
+# Firebase Emulator
+.firebase/
+database-debug.log
+firestore-debug.log
+ui-debug.log
+firebase-debug.log
+firebase-debug.log*
+firebase-export-*.json
+firebase-export-*.zip
+
+# Node.js / Werkzeuge
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.pnpm-store/
+.cache/
+coverage/
+
+# Umgebungsvariablen und Zugangsdaten
+.env
+.env.*
+!.env.example
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+
+# Betriebssystem
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Editoren
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporäre Dateien
+*.tmp
+*.temp
+*.log

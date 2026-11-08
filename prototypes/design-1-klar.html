@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design 1 · Klar &amp; Klassisch — Helferplan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 700: '#174A73', 800: '#0D2A45', 900: '#0A1F33' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(15, 42, 70, .04), 0 10px 28px -14px rgba(15, 42, 70, .22)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800 antialiased">
+
+  <svg xmlns="http://www.w3.org/2000/svg" class="hidden" aria-hidden="true">
+    <defs>
+      <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 6.8a2 2 0 0 0-4-4L3.8 16.2a2 2 0 0 0-.5.8l-1.3 4.4a.5.5 0 0 0 .6.6l4.4-1.3a2 2 0 0 0 .8-.5Z"/><path d="m15 5 4 4"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></symbol>
+      <symbol id="i-beer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h9v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3Z"/><path d="M15 8h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M6 9h9"/></symbol>
+      <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+      <symbol id="i-cake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16c1.5 0 1.5 1.5 3 1.5s1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5"/><path d="M2 21h20M7 8v3M12 8v3M17 8v3M7 4h.01M12 4h.01M17 4h.01"/></symbol>
+      <symbol id="i-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7Z"/></symbol>
+      <symbol id="i-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3M12 21.8a9.9 9.9 0 0 1-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 0 1-1.5-5.3c0-5.4 4.4-9.9 9.9-9.9 2.6 0 5.1 1 7 3a9.8 9.8 0 0 1 2.9 6.9c0 5.5-4.4 9.9-9.9 9.9m8.4-18.3A11.8 11.8 0 0 0 12 0C5.5 0 .2 5.3.2 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.7c1.7.9 3.7 1.4 5.7 1.4 6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.4Z"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="relative overflow-hidden bg-navy-900 text-white">
+    <div class="pointer-events-none absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 22px 22px;"></div>
+    <div class="relative mx-auto max-w-3xl px-4 sm:px-6">
+      <nav class="flex h-14 items-center justify-between border-b border-white/10">
+        <a href="#" class="flex items-center gap-2.5">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-white text-sm font-extrabold text-navy-900">H</span>
+          <span class="font-semibold tracking-tight">Helferplan</span>
+          <span class="hidden rounded-full border border-sky-200/20 px-2 py-0.5 text-[10px] uppercase tracking-[.18em] text-sky-200/70 sm:inline">TSV Musterstadt</span>
+        </a>
+        <a href="#" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-sky-100/90 transition hover:bg-white/10 hover:text-white">
+          <svg class="h-3.5 w-3.5"><use href="#i-lock"/></svg>
+          Admin
+        </a>
+      </nav>
+      <div class="py-7 sm:py-9">
+        <div class="flex flex-wrap items-end justify-between gap-6">
+          <div class="max-w-xl">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-300">Vereinsfest 2026 · TSV Musterstadt</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Helfer gesucht.<br class="hidden sm:block"> Packst du mit an?</h1>
+            <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300">
+              <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-sky-400"><use href="#i-calendar"/></svg>Sa, 14. Juni 2026</span>
+              <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-sky-400"><use href="#i-pin"/></svg>Festplatz am Sportheim</span>
+            </div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 backdrop-blur">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl font-bold tabular-nums">10<span class="text-lg font-medium text-slate-400">/18</span></span>
+              <div class="text-xs leading-tight text-slate-300"><span class="block font-semibold text-white">Plätze belegt</span>8 Helfer fehlen noch</div>
+            </div>
+            <div class="mt-2.5 h-1.5 w-44 overflow-hidden rounded-full bg-white/15">
+              <div class="h-full w-[56%] rounded-full bg-sky-400"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <div class="no-scrollbar mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto px-4 py-3 sm:px-6">
+      <span class="mr-1 hidden items-center gap-1.5 text-xs font-medium text-slate-400 sm:inline-flex">
+        <svg class="h-4 w-4"><use href="#i-sliders"/></svg>Filter
+      </span>
+      <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
+        <span class="text-slate-400">Stand:</span><span class="font-semibold text-slate-800">Alle</span><svg class="h-3.5 w-3.5 text-slate-400"><use href="#i-chevron"/></svg>
+      </button>
+      <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
+        <span class="text-slate-400">Schicht:</span><span class="font-semibold text-slate-800">Alle</span><svg class="h-3.5 w-3.5 text-slate-400"><use href="#i-chevron"/></svg>
+      </button>
+      <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
+        <span class="text-slate-400">Gruppe:</span><span class="font-semibold text-slate-800">Alle</span><svg class="h-3.5 w-3.5 text-slate-400"><use href="#i-chevron"/></svg>
+      </button>
+      <a href="#" class="ml-auto hidden shrink-0 items-center gap-1.5 text-xs font-medium text-slate-400 transition hover:text-slate-700 sm:inline-flex">
+        <svg class="h-3.5 w-3.5"><use href="#i-refresh"/></svg>Zurücksetzen
+      </a>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Schichtplan</h2>
+        <p class="mt-0.5 text-sm text-slate-500">Tippe auf einen freien Platz und trag dich ein.</p>
+      </div>
+      <div class="flex items-center gap-3 text-[11px] text-slate-500">
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100"></span>belegt</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm border border-dashed border-sky-400 bg-sky-50"></span>frei</span>
+      </div>
+    </div>
+
+    <div class="space-y-5">
+
+      <!-- Schicht 1 -->
+      <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-xl bg-navy-800 text-white shadow-sm">
+              <svg class="h-5 w-5"><use href="#i-clock"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900">Frühschicht</h3>
+              <p class="text-sm tabular-nums text-slate-500">11:00 – 14:00 Uhr</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">2 frei</span>
+            <span class="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 sm:inline">5/7 belegt</span>
+          </div>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700"><svg class="h-[18px] w-[18px]"><use href="#i-flame"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Grill</h4>
+                    <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-600/10">Aktive</span>
+                  </div>
+                  <p class="text-xs text-slate-500">2 von 3 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>1 Platz frei</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-bold text-white">LH</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Lena Hoffmann</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-bold text-white">JW</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Jonas Weber</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 px-3 py-2.5 text-left transition hover:border-sky-400 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-sky-300 bg-white text-sky-600 transition group-hover:border-sky-400"><svg class="h-4 w-4"><use href="#i-plus"/></svg></span>
+                <span class="flex-1 text-sm font-medium text-sky-800">Freier Platz</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-sky-600">Eintragen</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-teal-100 bg-teal-50 text-teal-700"><svg class="h-[18px] w-[18px]"><use href="#i-beer"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Ausschank</h4>
+                    <span class="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 ring-1 ring-inset ring-sky-600/10">Jugend</span>
+                  </div>
+                  <p class="text-xs text-slate-500">2 von 2 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><svg class="h-3.5 w-3.5"><use href="#i-check"/></svg>Vollzählig</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal-700 text-[11px] font-bold text-white">MS</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Mia Schneider</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal-700 text-[11px] font-bold text-white">TK</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Timo Krause</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-700"><svg class="h-[18px] w-[18px]"><use href="#i-cash"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Kasse</h4>
+                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Ohne Gruppe</span>
+                  </div>
+                  <p class="text-xs text-slate-500">1 von 2 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>1 Platz frei</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-700 text-[11px] font-bold text-white">SK</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Sarah Klein</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 px-3 py-2.5 text-left transition hover:border-sky-400 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-sky-300 bg-white text-sky-600 transition group-hover:border-sky-400"><svg class="h-4 w-4"><use href="#i-plus"/></svg></span>
+                <span class="flex-1 text-sm font-medium text-sky-800">Freier Platz</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-sky-600">Eintragen</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schicht 2 -->
+      <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-xl bg-navy-800 text-white shadow-sm">
+              <svg class="h-5 w-5"><use href="#i-clock"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900">Mittagsschicht</h3>
+              <p class="text-sm tabular-nums text-slate-500">14:00 – 17:00 Uhr</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">3 frei</span>
+            <span class="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 sm:inline">4/7 belegt</span>
+          </div>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700"><svg class="h-[18px] w-[18px]"><use href="#i-flame"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Grill</h4>
+                    <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-600/10">Aktive</span>
+                  </div>
+                  <p class="text-xs text-slate-500">1 von 3 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>2 Plätze frei</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-bold text-white">MB</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Markus Braun</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 px-3 py-2.5 text-left transition hover:border-sky-400 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-sky-300 bg-white text-sky-600 transition group-hover:border-sky-400"><svg class="h-4 w-4"><use href="#i-plus"/></svg></span>
+                <span class="flex-1 text-sm font-medium text-sky-800">Freier Platz</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-sky-600">Eintragen</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 px-3 py-2.5 text-left transition hover:border-sky-400 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-sky-300 bg-white text-sky-600 transition group-hover:border-sky-400"><svg class="h-4 w-4"><use href="#i-plus"/></svg></span>
+                <span class="flex-1 text-sm font-medium text-sky-800">Freier Platz</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-sky-600">Eintragen</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-teal-100 bg-teal-50 text-teal-700"><svg class="h-[18px] w-[18px]"><use href="#i-beer"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Ausschank</h4>
+                    <span class="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 ring-1 ring-inset ring-sky-600/10">Jugend</span>
+                  </div>
+                  <p class="text-xs text-slate-500">1 von 2 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>1 Platz frei</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal-700 text-[11px] font-bold text-white">NF</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Nina Fischer</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 px-3 py-2.5 text-left transition hover:border-sky-400 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-sky-300 bg-white text-sky-600 transition group-hover:border-sky-400"><svg class="h-4 w-4"><use href="#i-plus"/></svg></span>
+                <span class="flex-1 text-sm font-medium text-sky-800">Freier Platz</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide text-sky-600">Eintragen</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 py-4 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-9 w-9 place-items-center rounded-lg border border-rose-100 bg-rose-50 text-rose-700"><svg class="h-[18px] w-[18px]"><use href="#i-cake"/></svg></span>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <h4 class="text-sm font-semibold text-slate-900">Kuchenbuffet</h4>
+                    <span class="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 ring-1 ring-inset ring-violet-600/10">Vorstand</span>
+                  </div>
+                  <p class="text-xs text-slate-500">2 von 2 Plätzen belegt</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700"><svg class="h-3.5 w-3.5"><use href="#i-check"/></svg>Vollzählig</span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-rose-700 text-[11px] font-bold text-white">PL</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Petra Lang</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+              <button type="button" class="group flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-rose-700 text-[11px] font-bold text-white">AW</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">Andrea Wolf</span>
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-slate-500"><use href="#i-pencil"/></svg>
+                <span class="sr-only">Eintrag bearbeiten</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schicht 3 -->
+      <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-xl bg-navy-800 text-white shadow-sm">
+              <svg class="h-5 w-5"><use href="#i-clock"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900">Abendschicht</h3>
+              <p class="text-sm tabular-nums text-slate-500">17:00 – 20:00 Uhr</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10">3 frei</span>
+            <span class="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 sm:inline">1/4 belegt</span>
+          </div>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div class="flex flex-wrap items-center gap-3 px-4 py-3.5 sm:px-5">
+            <div class="flex min-w-[150px] items-center gap-2.5">
+              <span class="grid h-8 w-8 place-items-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-700"><svg class="h-4 w-4"><use href="#i-cash"/></svg></span>
+              <div><h4 class="text-sm font-semibold text-slate-900">Kasse</h4><p class="text-[11px] text-slate-500">0 von 2 belegt</p></div>
+            </div>
+            <div class="flex flex-1 flex-wrap gap-2">
+              <button type="button" class="flex min-h-[40px] flex-1 items-center gap-2 rounded-lg border border-dashed border-sky-300 bg-sky-50/60 px-3 text-sm font-medium text-sky-800 transition hover:bg-sky-50">
+                <svg class="h-4 w-4 text-sky-600"><use href="#i-plus"/></svg>Platz eintragen
+              </button>
+              <button type="button" class="flex min-h-[40px] flex-1 items-center gap-2 rounded-lg border border-dashed border-sky-300 bg-sky-50/60 px-3 text-sm font-medium text-sky-800 transition hover:bg-sky-50">
+                <svg class="h-4 w-4 text-sky-600"><use href="#i-plus"/></svg>Platz eintragen
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 px-4 py-3.5 sm:px-5">
+            <div class="flex min-w-[150px] items-center gap-2.5">
+              <span class="grid h-8 w-8 place-items-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700"><svg class="h-4 w-4"><use href="#i-droplet"/></svg></span>
+              <div><h4 class="text-sm font-semibold text-slate-900">Spüldienst</h4><p class="text-[11px] text-slate-500">1 von 2 belegt</p></div>
+            </div>
+            <div class="flex flex-1 flex-wrap gap-2">
+              <button type="button" class="flex min-h-[40px] flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm font-medium text-slate-800 transition hover:bg-white">
+                <span class="grid h-6 w-6 place-items-center rounded-full bg-navy-700 text-[9px] font-bold text-white">FN</span>
+                <span class="truncate">Felix Neumann</span>
+                <svg class="ml-auto h-3 w-3 shrink-0 text-slate-300"><use href="#i-pencil"/></svg>
+              </button>
+              <button type="button" class="flex min-h-[40px] flex-1 items-center gap-2 rounded-lg border border-dashed border-sky-300 bg-sky-50/60 px-3 text-sm font-medium text-sky-800 transition hover:bg-sky-50">
+                <svg class="h-4 w-4 text-sky-600"><use href="#i-plus"/></svg>Platz eintragen
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- WhatsApp teilen -->
+    <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+      <div class="p-5 sm:p-6">
+        <div class="flex items-start gap-4">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#25D366]/10 text-[#1FAF54]"><svg class="h-5 w-5"><use href="#i-whatsapp"/></svg></span>
+          <div>
+            <h3 class="font-bold text-slate-900">Noch Helfer gesucht?</h3>
+            <p class="mt-1 text-sm leading-relaxed text-slate-500">Teile den Schichtplan direkt in eurer WhatsApp-Gruppe – ein Klick genügt.</p>
+          </div>
+        </div>
+        <a href="#" class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1FAF54] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#188F44] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1FAF54] focus-visible:ring-offset-2">
+          <svg class="h-4 w-4"><use href="#i-whatsapp"/></svg>Auf WhatsApp teilen
+        </a>
+        <p class="mt-3 text-center text-[11px] text-slate-400">Keine Anmeldung nötig · Namen lassen sich jederzeit anpassen</p>
+      </div>
+    </section>
+
+    <footer class="mt-6 flex flex-wrap items-center justify-between gap-3 px-1 text-[11px] text-slate-400">
+      <p>Helferplan · TSV Musterstadt e.V.</p>
+      <a href="#" class="inline-flex items-center gap-1 font-medium text-slate-500 transition hover:text-navy-800"><svg class="h-3.5 w-3.5"><use href="#i-lock"/></svg>Admin-Login</a>
+    </footer>
+  </main>
+</body>
+</html>
