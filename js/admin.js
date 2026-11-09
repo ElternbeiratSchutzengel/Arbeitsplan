@@ -1692,7 +1692,7 @@ function renderGroups() {
     main.append(createEl("p", "admin-list-name", String(group?.name ?? "Gruppe")));
 
     const meta = createEl("div", "admin-list-meta");
-    const colorLabel = COLORS[group?.color]?.label ?? group?.color ?? "Schiefer";
+    const colorLabel = COLORS[group?.color]?.label ?? group?.color ?? "Grau";
     meta.append(createEl("span", "", `Farbe: ${colorLabel}`));
     meta.append(createEl("span", "", `Reihenfolge ${index + 1}`));
     const assignedStands = Object.values(state.stands).filter(

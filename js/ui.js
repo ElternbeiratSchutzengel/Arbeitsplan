@@ -104,14 +104,14 @@ export function sortByOrder(entries) {
 
 export const COLORS = {
   sky: {
-    label: "Himmelblau",
+    label: "Blau",
     bg: "#F0F9FF",
     border: "#E0F2FE",
     text: "#0369A1",
     avatar: "#174A73"
   },
   teal: {
-    label: "Petrol",
+    label: "Türkis",
     bg: "#F0FDFA",
     border: "#CCFBF1",
     text: "#0F766E",
@@ -125,35 +125,35 @@ export const COLORS = {
     avatar: "#4338CA"
   },
   rose: {
-    label: "Rosé",
+    label: "Rot",
     bg: "#FFF1F2",
     border: "#FFE4E6",
     text: "#BE123C",
     avatar: "#BE123C"
   },
   amber: {
-    label: "Bernstein",
+    label: "Gelb",
     bg: "#FFFBEB",
     border: "#FDE68A",
     text: "#B45309",
     avatar: "#B45309"
   },
   violet: {
-    label: "Violett",
+    label: "Lila",
     bg: "#F5F3FF",
     border: "#EDE9FE",
     text: "#6D28D9",
     avatar: "#6D28D9"
   },
   emerald: {
-    label: "Smaragd",
+    label: "Grün",
     bg: "#ECFDF5",
     border: "#D1FAE5",
     text: "#047857",
     avatar: "#047857"
   },
   slate: {
-    label: "Schiefer",
+    label: "Grau",
     bg: "#F1F5F9",
     border: "#E2E8F0",
     text: "#475569",
