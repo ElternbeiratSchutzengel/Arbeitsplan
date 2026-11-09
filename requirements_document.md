@@ -252,7 +252,7 @@ Die Helfer-Ansicht ist die öffentliche Startseite `index.html`. Sie ist nach De
 
 #### 4.8 Footer und Datenschutz
 
-* **FR-H-74 (MUSS):** Der Footer zeigt „Helferplan · {clubName} e.V.“ sowie einen Link „Admin-Login“ zu `admin.html`.
+* **FR-H-74 (MUSS):** Der Footer zeigt „Helferplan · {clubName}“ sowie einen Link „Admin-Login“ zu `admin.html`.
 * **FR-H-75 (MUSS):** Der Footer ist nicht sticky und erscheint nach dem WhatsApp-Bereich.
 * **FR-H-76 (SOLL):** Der Footer enthält einen Link „Datenschutz“, der eine statische Datenschutzhinweis-Seite oder ein Modal öffnet.
 * **FR-H-77 (MUSS):** Der Footer ist auch bei 320 px Breite lesbar; die Elemente brechen um.
@@ -280,7 +280,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 
 #### 5.2 Veranstaltungseinstellungen
 
-* **FR-A-13 (MUSS):** Der Admin kann folgende Felder bearbeiten: Vereinsname, Veranstaltungsname, Datum, Ort und Tagline. Der Vereinsname wird ohne Rechtsform eingegeben; die Helfer-Ansicht ergänzt im Footer „e.V.“.
+* **FR-A-13 (MUSS):** Der Admin kann folgende Felder bearbeiten: Vereinsname, Veranstaltungsname, Datum, Ort und Tagline. Der Vereinsname wird im Footer unverändert angezeigt.
 * **FR-A-14 (MUSS):** Pflichtfelder: Vereinsname, Veranstaltungsname, Datum, Ort. Die Tagline ist optional.
 * **FR-A-15 (MUSS):** Längenlimits: Vereinsname 1–80, Veranstaltungsname 1–80, Ort 1–120, Tagline 0–160 Zeichen.
 * **FR-A-16 (MUSS):** Das Datum wird als ISO-Datum (`YYYY-MM-DD`) gespeichert und in der Helfer-Ansicht deutsch formatiert.

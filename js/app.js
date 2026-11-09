@@ -21,7 +21,7 @@ import {
   formatEventDate,
   formatTimeRange,
   initials,
-  clubWithEV,
+  displayClubName,
   plural,
   groupForStand,
   canonicalPageUrl,
@@ -398,7 +398,7 @@ function renderHeader() {
   qs("#hero-title").textContent = tagline || eventName;
   qs("#hero-date").textContent = dateLabel || "Datum folgt";
   qs("#hero-location").textContent = locationLabel || "Ort folgt";
-  qs("#footer-club").textContent = `Helferplan · ${clubWithEV(clubName)}`;
+  qs("#footer-club").textContent = `Helferplan · ${displayClubName(clubName)}`;
 
   const stats = computeStats();
   const count = qs("#progress-count");

@@ -56,11 +56,8 @@ export function initials(name) {
   return `${first}${last}`.toLocaleUpperCase("de");
 }
 
-export function clubWithEV(clubName) {
-  const value = String(clubName ?? "").trim();
-  if (!value) return "Verein e.V.";
-  if (/e\.?\s*v\.?$/i.test(value)) return value;
-  return `${value} e.V.`;
+export function displayClubName(clubName) {
+  return String(clubName ?? "").trim() || "Verein";
 }
 
 export function plural(count, singular, pluralForm) {

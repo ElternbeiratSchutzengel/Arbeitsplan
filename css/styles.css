@@ -1792,17 +1792,6 @@ svg {
   font-size: 12px;
 }
 
-.privacy-note {
-  margin: 16px 0 0;
-  padding: 10px 12px;
-  border: 1px solid var(--slate-200);
-  border-radius: 10px;
-  background: var(--slate-50);
-  color: var(--slate-600);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 /* --------------------------------------------------------------------------
    Dialoge
    -------------------------------------------------------------------------- */

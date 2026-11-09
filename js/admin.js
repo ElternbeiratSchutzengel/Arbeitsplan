@@ -28,7 +28,7 @@ import {
   formatEventDate,
   formatDateTime,
   formatTimeRange,
-  clubWithEV,
+  displayClubName,
   groupForStand,
   sortByOrder,
   applyTone,
@@ -2627,7 +2627,7 @@ function preparePrintView() {
   clearElement(header);
   header.className = "print-header";
   header.append(createEl("h1", "", String(state.config.eventName || "Helferplan")));
-  header.append(createEl("p", "", clubWithEV(state.config.clubName)));
+  header.append(createEl("p", "", displayClubName(state.config.clubName)));
   const metaParts = [formatEventDate(state.config.eventDate), state.config.eventLocation].filter(
     Boolean
   );
