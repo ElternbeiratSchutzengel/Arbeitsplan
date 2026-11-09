@@ -347,7 +347,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 
 * **FR-A-60 (MUSS):** Der Admin kann die Helferliste drucken bzw. als PDF speichern. Der Button öffnet den Browser-Druckdialog.
 * **FR-A-61 (MUSS):** Das Drucklayout ist A4 Hochformat mit Veranstaltungsheader (Verein, Veranstaltung, Datum, Ort), Tabelle und Generierungszeitpunkt.
-* **FR-A-62 (MUSS):** Die Drucktabelle enthält unabhängig von aktiven Filtern alle Schichten und Stände mit Schicht, Zeit, Stand, Gruppe, Platz, Name und Status. Freie Plätze werden als „frei“ ausgegeben.
+* **FR-A-62 (MUSS):** Die Drucktabelle ist eine Matrix und enthält unabhängig von aktiven Filtern alle Schichten und Stände: Die erste Spalte listet die Stände mit Gruppe, die erste Zeile alle Schichten mit ihren Zeiten. Jede Zelle enthält die belegten Plätze mit Namen; freie Plätze werden als „frei“ ausgegeben.
 * **FR-A-63 (MUSS):** Navigation, Filter, Buttons, WhatsApp-Karte, Footer-Links und Schatten werden im Druck ausgeblendet. Es werden keine Seiten mitten in einer Tabellenzeile umbrochen.
 * **FR-A-64 (MUSS):** Der CSV-Export erzeugt eine Datei mit UTF-8-BOM, Semikolon als Trennzeichen und CRLF-Zeilenenden.
 * **FR-A-65 (MUSS):** CSV-Spalten: `Schicht;Zeit;Stand;Gruppe;Platz;Name;Status`. `Platz` ist 1-basiert. `Status` ist `belegt` oder `frei`.
@@ -856,7 +856,7 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * **AC-18 – Bedarf reduzieren:** Given ein Stand hat 3 belegte Plätze. When ich den Bedarf auf 2 senke und bestätige. Then wird der überzählige Platz gelöscht und die Belegung zeigt 2/2.
 * **AC-19 – Einträge zurücksetzen:** Given es gibt Einträge. When ich „Einträge zurücksetzen“ bestätige. Then sind alle Assignments gelöscht, die Konfiguration bleibt erhalten und die Zähler stehen auf 0.
 * **AC-20 – CSV-Export:** Given es gibt belegte und freie Plätze. When ich CSV exportiere. Then enthält die Datei alle Slots mit den Spalten aus FR-A-65 und öffnet in Excel korrekt.
-* **AC-21 – Druck/PDF:** Given ich öffne den Druckdialog. Then sind Navigation, Filter und Buttons ausgeblendet und die Tabelle ist auf A4 lesbar.
+* **AC-21 – Druck/PDF:** Given ich öffne den Druckdialog. Then sind Navigation, Filter und Buttons ausgeblendet und die Helferliste ist als Matrix mit Ständen in der ersten Spalte und Schichten samt Zeiten in der ersten Zeile auf A4 lesbar.
 * **AC-22 – Barrierefreiheit:** Given ich navigiere nur mit der Tastatur. Then sind alle Funktionen erreichbar und der Fokus ist sichtbar.
 * **AC-23 – Mobile 320 px:** Given ich öffne die Seite bei 320 px Breite. Then gibt es keinen horizontalen Überlauf außerhalb der Filterleiste; alle Inhalte sind lesbar.
 * **AC-24 – Offline:** Given ich bin offline und lasse die Seite geöffnet. When ich einen Eintrag speichere. Then erscheint das Offline-Banner, der Platz zeigt „Wird synchronisiert“ und der Eintrag wird nach Wiederverbindung ohne Reload synchronisiert.

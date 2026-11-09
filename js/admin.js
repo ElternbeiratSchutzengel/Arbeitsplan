@@ -2618,11 +2618,14 @@ function exportJson() {
 }
 
 function preparePrintView() {
-  const rows = collectExportRows();
   const header = $("print-header");
+  const thead = $("print-thead");
   const tbody = $("print-tbody");
   const generated = $("print-generated");
-  if (!header || !tbody || !generated) return;
+  if (!header || !thead || !tbody || !generated) return;
+
+  const shifts = sortedShifts();
+  const stands = sortedStands();
 
   clearElement(header);
   header.className = "print-header";
@@ -2632,34 +2635,79 @@ function preparePrintView() {
     Boolean
   );
   if (metaParts.length > 0) header.append(createEl("p", "", metaParts.join(" · ")));
-  header.append(createEl("p", "print-meta", "Helferliste – alle Schichten, Stände und Plätze"));
+  header.append(createEl("p", "print-meta", "Helferliste – Stände je Schicht"));
+
+  clearElement(thead);
+  const headRow = createEl("tr");
+  const corner = createEl("th", "print-corner", "Stand");
+  corner.scope = "col";
+  headRow.append(corner);
+
+  for (const [, shift] of shifts) {
+    const cell = createEl("th", "print-shift");
+    cell.scope = "col";
+    cell.append(createEl("span", "print-shift-name", String(shift?.name ?? "Schicht")));
+    cell.append(
+      createEl("span", "print-shift-time", formatTimeRange(shift?.start, shift?.end) || "Keine Zeit")
+    );
+    headRow.append(cell);
+  }
+  thead.append(headRow);
 
   clearElement(tbody);
-  if (rows.length === 0) {
+  let total = 0;
+  let filled = 0;
+
+  if (stands.length === 0 || shifts.length === 0) {
     const row = createEl("tr");
-    const cell = createEl("td", "", "Keine Plätze vorhanden.");
-    cell.colSpan = 7;
+    const cell = createEl(
+      "td",
+      "print-empty-row",
+      stands.length === 0 ? "Keine Stände vorhanden." : "Keine Schichten vorhanden."
+    );
+    cell.colSpan = Math.max(1, shifts.length + 1);
     row.append(cell);
     tbody.append(row);
   } else {
-    for (const data of rows) {
+    for (const [standId, stand] of stands) {
       const row = createEl("tr");
-      for (const value of [
-        data.shiftName,
-        data.time,
-        data.standName,
-        data.groupName,
-        String(data.slot),
-        data.name || "–",
-        data.status
-      ]) {
-        row.append(createEl("td", "", value));
+      const label = createEl("th", "print-stand");
+      label.scope = "row";
+      label.append(createEl("span", "print-stand-name", String(stand?.name ?? "Stand")));
+      const group = groupForStand(state.groups, stand);
+      if (group) label.append(createEl("span", "print-stand-group", group.name));
+      row.append(label);
+
+      for (const [shiftId] of shifts) {
+        const demand = getDemandValue(shiftId, standId);
+        const slots = assignmentSlots(shiftId, standId);
+        const cell = createEl("td", "print-slots");
+
+        if (demand <= 0) {
+          cell.append(createEl("span", "print-no-demand", "–"));
+        } else {
+          for (let slotIndex = 0; slotIndex < demand; slotIndex += 1) {
+            const record = slots[String(slotIndex)];
+            const name =
+              isObject(record) && typeof record.name === "string" ? record.name.trim() : "";
+            total += 1;
+            if (name) {
+              filled += 1;
+              cell.append(createEl("span", "print-slot print-slot--filled", name));
+            } else {
+              cell.append(createEl("span", "print-slot print-slot--free", "frei"));
+            }
+          }
+        }
+
+        row.append(cell);
       }
       tbody.append(row);
     }
   }
 
-  generated.textContent = `Erstellt am ${formatDateTime(Date.now())} Uhr`;
+  const free = total - filled;
+  generated.textContent = `${filled} von ${total} Plätzen belegt · ${free} frei · Erstellt am ${formatDateTime(Date.now())} Uhr`;
 }
 
 function printHelferList() {

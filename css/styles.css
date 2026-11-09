@@ -2963,6 +2963,7 @@ svg {
 .print-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 8.5pt;
 }
 
@@ -2972,11 +2973,76 @@ svg {
   border: 1px solid #777;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .print-table th {
   background: #e8e8e8;
   font-weight: 700;
+  vertical-align: bottom;
+}
+
+.print-table thead th {
+  text-align: center;
+}
+
+.print-table .print-corner,
+.print-table .print-stand {
+  width: 22%;
+  text-align: left;
+}
+
+.print-shift-name,
+.print-shift-time,
+.print-stand-name,
+.print-stand-group,
+.print-slot {
+  display: block;
+}
+
+.print-shift-name {
+  font-weight: 700;
+}
+
+.print-shift-time {
+  margin-top: 1px;
+  font-size: 7.5pt;
+  font-weight: 400;
+}
+
+.print-stand-name {
+  font-weight: 700;
+}
+
+.print-stand-group {
+  margin-top: 2px;
+  color: #555;
+  font-size: 7.5pt;
+  font-weight: 400;
+}
+
+.print-slots {
+  text-align: left;
+}
+
+.print-slot {
+  line-height: 1.3;
+}
+
+.print-slot--free,
+.print-no-demand {
+  color: #666;
+  font-style: italic;
+}
+
+.print-no-demand {
+  display: block;
+  text-align: center;
+}
+
+.print-empty-row {
+  color: #555;
+  text-align: center;
 }
 
 .print-table tr {

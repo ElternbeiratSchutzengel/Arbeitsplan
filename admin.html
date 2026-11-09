@@ -559,7 +559,7 @@
           </div>
 
           <div class="panel panel--muted">
-            <div class="panel-head"><div><h2>Hinweis zum Druck</h2><p>Im Druckdialog werden Navigation, Filter und Buttons automatisch ausgeblendet. Für ein PDF „Als PDF speichern“ als Ziel wählen.</p></div></div>
+            <div class="panel-head"><div><h2>Hinweis zum Druck</h2><p>Die Druckansicht zeigt eine Matrix mit Ständen als Zeilen und Schichten samt Zeiten als Spalten. Navigation, Filter und Buttons werden automatisch ausgeblendet. Für ein PDF „Als PDF speichern“ als Ziel wählen.</p></div></div>
           </div>
         </section>
 
@@ -701,9 +701,7 @@
   <section class="print-area" id="print-area" aria-hidden="true">
     <header id="print-header"></header>
     <table class="print-table" id="print-table">
-      <thead>
-        <tr><th>Schicht</th><th>Zeit</th><th>Stand</th><th>Gruppe</th><th>Platz</th><th>Name</th><th>Status</th></tr>
-      </thead>
+      <thead id="print-thead"></thead>
       <tbody id="print-tbody"></tbody>
     </table>
     <p class="print-generated" id="print-generated"></p>
