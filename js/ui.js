@@ -377,6 +377,48 @@ export function showToast(message, type = "success", { duration = 4500 } = {}) {
 
 const modalConfigs = new Map();
 const modalStack = [];
+let viewportSyncInitialized = false;
+let viewportSyncTimer = 0;
+
+/**
+ * Hält die Dialogebene exakt auf dem sichtbaren Viewport.
+ * Auf Mobilgeräten schrumpft beim Öffnen der Tastatur nur der visualViewport,
+ * nicht aber das Layout-Viewport. Ohne diesen Abgleich läge die Aktionsleiste
+ * des Dialogs hinter der Tastatur.
+ */
+function syncModalViewport() {
+  const root = document.documentElement;
+  const viewport = window.visualViewport;
+  const height = viewport ? viewport.height : window.innerHeight;
+  const top = viewport ? viewport.offsetTop : 0;
+
+  root.style.setProperty("--visual-viewport-height", `${Math.max(0, Math.round(height))}px`);
+  root.style.setProperty("--visual-viewport-top", `${Math.max(0, Math.round(top))}px`);
+}
+
+function scheduleModalViewportSync() {
+  syncModalViewport();
+  window.clearTimeout(viewportSyncTimer);
+  // Tastaturen werden animiert ein-/ausgeblendet. Ein kurzer Nachlauf stellt
+  // sicher, dass die Dialogebene auch danach exakt sitzt.
+  viewportSyncTimer = window.setTimeout(syncModalViewport, 300);
+}
+
+function ensureModalViewportSync() {
+  syncModalViewport();
+  if (viewportSyncInitialized) return;
+  viewportSyncInitialized = true;
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncModalViewport, { passive: true });
+    window.visualViewport.addEventListener("scroll", syncModalViewport, { passive: true });
+  }
+
+  window.addEventListener("resize", syncModalViewport, { passive: true });
+  window.addEventListener("orientationchange", syncModalViewport, { passive: true });
+  document.addEventListener("focusin", scheduleModalViewportSync, { passive: true });
+  document.addEventListener("focusout", scheduleModalViewportSync, { passive: true });
+}
 
 export function setupModal(id, { onRequestClose = null } = {}) {
   const layer = document.getElementById(id);
@@ -417,6 +459,7 @@ export function openModal(id, { opener = document.activeElement, focusSelector =
   }
 
   config.opener = opener instanceof HTMLElement ? opener : document.activeElement;
+  ensureModalViewportSync();
   layer.hidden = false;
   layer.classList.remove("is-open");
   // Reflow erzwingen, damit die Einblend-Animation startet.

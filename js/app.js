@@ -834,9 +834,11 @@ function buildStandBlock(shiftId, shift, stand, demand) {
   const titleRow = createEl("div", "stand-title-row");
   titleRow.append(createEl("h4", "stand-name", stand.name || "Stand"));
 
-  const groupBadge = createEl("span", `group-badge${group ? "" : " group-badge--none"}`, group?.name ?? "Ohne Gruppe");
-  if (group) applyTone(groupBadge, group.color);
-  titleRow.append(groupBadge);
+  if (group) {
+    const groupBadge = createEl("span", "group-badge", group.name);
+    applyTone(groupBadge, group.color);
+    titleRow.append(groupBadge);
+  }
 
   const demandWord = demand === 1 ? "Platz" : "Plätzen";
   const occupancy = createEl("p", "stand-meta", `${filled} von ${demand} ${demandWord} belegt`);
