@@ -1528,7 +1528,6 @@ function failSlotOperation(operation, { dialog = null, error = null, queued = fa
     if (input) input.disabled = false;
     if (deleteButton) {
       deleteButton.disabled = false;
-      deleteButton.textContent = "Löschen";
     }
     if (save) {
       save.textContent = dialog.mode === "create" ? "Eintragen" : "Speichern";
@@ -1732,7 +1731,6 @@ async function performDelete(dialog) {
   input.disabled = true;
   save.disabled = true;
   deleteButton.disabled = true;
-  deleteButton.textContent = "Wird gelöscht …";
 
   state.pendingWrites.set(key, { type: "delete" });
   scheduleRender();
