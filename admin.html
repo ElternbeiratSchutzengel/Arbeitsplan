@@ -60,11 +60,6 @@
     </defs>
   </svg>
 
-  <div id="demo-banner" class="demo-banner" role="status" hidden>
-    <svg class="icon icon-sm" aria-hidden="true"><use href="#i-info"/></svg>
-    <span><strong>Demo-Modus:</strong> Firebase ist noch nicht konfiguriert. Alle Daten werden nur lokal in diesem Browser gespeichert.</span>
-  </div>
-
   <div id="admin-loading" class="admin-loading">
     <span class="spinner" aria-hidden="true"></span>
     <p>Admin-Bereich wird geladen …</p>
@@ -91,7 +86,7 @@
 
       <div class="alert alert-info alert-security" id="auth-security">
         <svg class="icon icon-sm" aria-hidden="true"><use href="#i-shield"/></svg>
-        <span>Der Admin-Zugang ist ein UI-Schutz, keine Server-Authentifizierung. Der Passwort-Hash ist in der Datenbank lesbar. Bitte ein starkes, einzigartiges Passwort verwenden.</span>
+        <span>Der Admin-Zugang ist ein UI-Schutz, keine Server-Authentifizierung. Bitte verwenden Sie ein starkes, einzigartiges Passwort.</span>
       </div>
 
       <form id="setup-form" class="auth-form" novalidate hidden>
@@ -126,7 +121,7 @@
       </a>
     </div>
 
-    <p class="auth-footnote">Der Passwort-Hash liegt öffentlich lesbar in der Firebase-Datenbank. Verwenden Sie ein starkes, einzigartiges Passwort und teilen Sie den Admin-Zugang nicht weiter.</p>
+    <p class="auth-footnote">Der Passwort-Hash ist öffentlich lesbar. Verwenden Sie ein starkes, einzigartiges Passwort und teilen Sie den Admin-Zugang nicht weiter.</p>
   </section>
 
   <!-- Angemeldeter Admin-Bereich -->
@@ -196,10 +191,6 @@
               <h1 class="admin-page-title">Übersicht</h1>
               <p class="admin-page-subtitle">Alles Wichtige zur Veranstaltung auf einen Blick.</p>
             </div>
-            <span id="admin-connection" class="connection connection--online">
-              <span class="connection-dot" aria-hidden="true"></span>
-              <span id="admin-connection-text">Online</span>
-            </span>
           </div>
 
           <div class="stat-grid" id="stats-grid">
@@ -584,7 +575,7 @@
           <form id="password-form" class="panel panel--narrow" novalidate>
             <div class="alert alert-warning">
               <svg class="icon icon-sm" aria-hidden="true"><use href="#i-shield"/></svg>
-              <span>Der Passwort-Hash ist in der Datenbank öffentlich lesbar. Verwenden Sie ein starkes, einzigartiges Passwort.</span>
+              <span>Der Passwort-Hash ist öffentlich lesbar. Verwenden Sie ein starkes, einzigartiges Passwort.</span>
             </div>
             <div class="field">
               <label for="password-current">Aktuelles Passwort</label>
@@ -691,12 +682,12 @@
       <div class="prose">
         <p>Der Admin-Zugang ist ein UI-Schutz ohne Server-Authentifizierung. Eine automatische Passwort-Zurücksetzung per E-Mail gibt es nicht. So setzen Sie das Passwort zurück:</p>
         <ol>
-          <li>Öffnen Sie die Firebase Console und wählen Sie die Realtime Database.</li>
+          <li>Öffnen Sie die Verwaltungsoberfläche.</li>
           <li>Löschen Sie unter <code>config</code> die Felder <code>adminHash</code> und <code>adminSalt</code>.</li>
           <li>Laden Sie diese Seite neu. Es erscheint wieder die Erstvergabe.</li>
           <li>Vergeben Sie ein neues, starkes Passwort.</li>
         </ol>
-        <p class="hint">Diese Anleitung steht auch im README. Der Zugriff auf die Firebase Console ist dabei die eigentliche Sicherheitsgrenze.</p>
+        <p class="hint">Diese Anleitung steht auch im README. Der Zugriff auf die Verwaltungsoberfläche ist dabei die eigentliche Sicherheitsgrenze.</p>
       </div>
       <div class="modal-actions">
         <div class="modal-actions-right">

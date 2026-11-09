@@ -58,16 +58,6 @@
     </defs>
   </svg>
 
-  <div id="demo-banner" class="demo-banner" role="status" hidden>
-    <svg class="icon icon-sm" aria-hidden="true"><use href="#i-info"/></svg>
-    <span><strong>Demo-Modus:</strong> Firebase ist noch nicht konfiguriert. Daten werden nur lokal in diesem Browser gespeichert.</span>
-  </div>
-
-  <div id="offline-banner" class="offline-banner" role="status" hidden>
-    <svg class="icon icon-sm" aria-hidden="true"><use href="#i-alert"/></svg>
-    <span>Offline – Änderungen werden synchronisiert, sobald wieder Verbindung besteht.</span>
-  </div>
-
   <header class="site-header">
     <div class="site-header-inner">
       <nav class="header-nav" aria-label="Hauptnavigation">
@@ -224,7 +214,7 @@
       <div id="error-state" class="error-state" hidden>
         <span class="empty-icon empty-icon--error" aria-hidden="true"><svg class="icon icon-lg"><use href="#i-alert"/></svg></span>
         <h2>Der Schichtplan konnte nicht geladen werden.</h2>
-        <p id="error-message">Bitte prüfe deine Verbindung und versuche es erneut.</p>
+        <p id="error-message">Bitte versuche es erneut.</p>
         <button type="button" class="btn btn-primary" id="error-retry">Erneut versuchen</button>
       </div>
 
@@ -250,10 +240,6 @@
     <footer class="site-footer">
       <p id="footer-club">Helferplan · Verein e.V.</p>
       <div class="footer-links">
-        <span id="connection-status" class="connection connection--online">
-          <span class="connection-dot" aria-hidden="true"></span>
-          <span id="connection-text">Online</span>
-        </span>
         <button type="button" class="footer-link footer-link--button" id="footer-privacy-link">Datenschutz</button>
         <a href="admin.html" class="footer-link">
           <svg class="icon icon-xs" aria-hidden="true"><use href="#i-lock"/></svg>
@@ -413,8 +399,6 @@
         <p>Der Helferplan dient ausschließlich der Organisation von Helfer-Schichten beim Vereinsfest.</p>
         <h3>Welche Daten werden gespeichert?</h3>
         <p>Es wird nur der von dir eingegebene Name gespeichert. Der Name ist öffentlich im Schichtplan sichtbar. Kontaktdaten, Adressen, Geburtsdaten oder Zahlungsdaten werden nicht erhoben.</p>
-        <h3>Wo werden die Daten gespeichert?</h3>
-        <p>Die Daten werden in einer Firebase Realtime Database von Google gespeichert. Firebase wird als Auftragsverarbeiter eingesetzt. Weitere Informationen enthält die <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von Firebase</a>.</p>
         <h3>Wie lange werden die Daten aufbewahrt?</h3>
         <p>Die Einträge bleiben bis zum Zurücksetzen durch den Admin gespeichert. Das technische Änderungsprotokoll (Audit-Log) wird nach Abschluss der Veranstaltung empfohlenermaßen gelöscht.</p>
         <h3>Löschung</h3>

@@ -114,11 +114,6 @@ function init() {
   if (state.initialized) return;
   state.initialized = true;
 
-  if (backendMode === "demo") {
-    const banner = qs("#demo-banner");
-    if (banner) banner.hidden = false;
-  }
-
   bindStaticEvents();
   setupStaticDialogs();
 
@@ -137,7 +132,7 @@ function init() {
 function checkInitialLoad() {
   if (state.loadError) return;
   if (DATA_PATHS.every(([key]) => state.loaded.has(key))) return;
-  showLoadError(new Error("Zeitüberschreitung beim Laden der Datenbank."));
+  showLoadError(new Error("Zeitüberschreitung beim Laden."));
 }
 
 function bindStaticEvents() {
@@ -235,16 +230,14 @@ function subscribeConnection() {
       const connected = snapshot.val() === true;
       const previous = state.connection;
       state.connection = connected;
-      updateConnectionUi();
 
       if (!connected) {
         // Der erste Verbindungsaufbau meldet kurz „false“, bevor die
-        // Firebase-Verbindung steht. Das ist kein Verbindungsabbruch.
+        // Verbindung steht. Das ist kein Verbindungsabbruch.
         if (state.hasConnected) state.wasOffline = true;
       } else {
         state.hasConnected = true;
         if (previous === false && state.wasOffline) {
-          showToast("Verbindung wiederhergestellt. Änderungen werden synchronisiert.", "success");
           processOfflineQueue();
         }
       }
@@ -313,7 +306,7 @@ function showLoadError(error) {
   const errorMessage = qs("#error-message");
   if (errorMessage) {
     errorMessage.textContent =
-      "Bitte prüfe deine Verbindung und versuche es erneut. Wenn der Fehler bleibt, wende dich an den Admin.";
+      "Bitte versuche es erneut. Wenn der Fehler bleibt, wende dich an den Admin.";
   }
   if (errorState) errorState.hidden = false;
 
@@ -350,7 +343,6 @@ function render() {
   const allLoaded = DATA_PATHS.every(([key]) => state.loaded.has(key));
   if (!allLoaded) {
     renderHeader();
-    updateConnectionUi();
     return;
   }
 
@@ -360,7 +352,6 @@ function render() {
   applyEventVisibility(eventExists);
   renderHeader();
   updateAdminLinkLabel();
-  updateConnectionUi();
 
   if (!eventExists) {
     const badge = qs("#brand-club");
@@ -909,26 +900,24 @@ function buildSlot(shiftId, shift, stand, demand, slotIndex) {
     button.setAttribute(
       "aria-label",
       isDelete
-        ? `${context}, Löschung wird synchronisiert`
-        : `${context}, belegt von ${pending.name}, wird synchronisiert`
+        ? context
+        : `${context}, belegt von ${pending.name}`
     );
 
     if (isDelete) {
       const plus = createEl("span", "slot-plus");
       plus.append(uiIcon("plus", "icon icon-sm"));
       button.append(plus, createEl("span", "slot-free-text", "Freier Platz"));
-      button.append(createEl("span", "slot-sync", "Wird synchronisiert"));
     } else {
       const avatar = createEl("span", "slot-avatar", initials(pending.name));
       applyTone(avatar, stand.color);
       const name = createEl("span", "slot-name", pending.name);
       name.title = pending.name;
       button.append(avatar, name);
-      button.append(createEl("span", "slot-sync", "Wird synchronisiert"));
     }
 
     button.addEventListener("click", () => {
-      showToast("Dieser Platz wird noch synchronisiert. Bitte warte einen Moment.", "info");
+      showToast("Bitte warte einen Moment.", "info");
     });
     return button;
   }
@@ -1100,20 +1089,6 @@ function updateAdminLinkLabel() {
   if (text) text.textContent = isAdminSessionValid() ? "Admin-Bereich" : "Admin";
 }
 
-function updateConnectionUi() {
-  const online = state.connection;
-  const banner = qs("#offline-banner");
-  if (banner) banner.hidden = online;
-
-  const status = qs("#connection-status");
-  const text = qs("#connection-text");
-  if (status) {
-    status.classList.toggle("connection--online", online);
-    status.classList.toggle("connection--offline", !online);
-  }
-  if (text) text.textContent = online ? "Online" : "Offline";
-}
-
 /* --------------------------------------------------------------------------
    WhatsApp
    -------------------------------------------------------------------------- */
@@ -1281,7 +1256,7 @@ async function submitEventForm(event) {
     console.error("Die Veranstaltung konnte nicht erstellt werden.", error);
     if (formError) {
       formError.textContent =
-        "Die Veranstaltung konnte nicht erstellt werden. Bitte prüfe deine Verbindung und versuche es erneut.";
+        "Die Veranstaltung konnte nicht erstellt werden. Bitte versuche es erneut.";
       formError.hidden = false;
     }
     showToast("Die Veranstaltung konnte nicht erstellt werden.", "error");
@@ -1298,7 +1273,7 @@ async function submitEventForm(event) {
 
 function openSlotDialog(shiftId, standId, slotIndex, opener) {
   if (state.pendingWrites.has(SLOT_KEY(shiftId, standId, slotIndex))) {
-    showToast("Dieser Platz wird noch synchronisiert.", "info");
+    showToast("Bitte warte einen Moment.", "info");
     return;
   }
 
@@ -1444,7 +1419,6 @@ async function saveSlotDialog() {
     closeSlotDialog({ restoreFocus: false, silent: true });
     state.focusSlotKey = key;
     scheduleRender();
-    showToast("Offline – der Eintrag wird synchronisiert, sobald wieder Verbindung besteht.", "info");
     return;
   }
 
@@ -1455,7 +1429,7 @@ async function saveSlotDialog() {
       closeSlotDialog({ restoreFocus: false, silent: true });
       state.focusSlotKey = key;
       scheduleRender();
-      showToast("Der Eintrag wird noch synchronisiert.", "info");
+      showToast("Das Speichern dauert länger als erwartet.", "info");
     }
   }, 15000);
 
@@ -1475,10 +1449,6 @@ async function saveSlotDialog() {
         state.focusSlotKey = key;
         scheduleRender();
       }
-      showToast(
-        "Offline – der Eintrag wird synchronisiert, sobald wieder Verbindung besteht.",
-        "info"
-      );
       return;
     }
 
@@ -1498,7 +1468,7 @@ function commitSlotOperation(operation) {
   });
 }
 
-function finishSlotOperation(operation, outcome, { dialog = null, queued = false } = {}) {
+function finishSlotOperation(operation, outcome, { dialog = null } = {}) {
   const { key } = operation;
   state.pendingWrites.delete(key);
   scheduleRender();
@@ -1521,11 +1491,9 @@ function finishSlotOperation(operation, outcome, { dialog = null, queued = false
     showToast(
       operation.kind === "delete"
         ? "Eintrag gelöscht."
-        : queued
-          ? "Synchronisiert. Danke für deine Hilfe!"
-          : operation.action === "create"
-            ? "Eingetragen. Danke für deine Hilfe!"
-            : "Gespeichert.",
+        : operation.action === "create"
+          ? "Eingetragen. Danke für deine Hilfe!"
+          : "Gespeichert.",
       "success"
     );
     return;
@@ -1570,8 +1538,8 @@ function failSlotOperation(operation, { dialog = null, error = null, queued = fa
 
   showToast(
     queued
-      ? "Eine vorgemerkte Änderung konnte nicht gespeichert werden. Bitte prüfe den Plan."
-      : "Speichern fehlgeschlagen. Bitte prüfe die Verbindung und versuche es erneut.",
+      ? "Eine Änderung konnte nicht gespeichert werden. Bitte prüfe den Plan."
+      : "Speichern fehlgeschlagen. Bitte versuche es erneut.",
     "error"
   );
 }
@@ -1591,7 +1559,7 @@ async function processOfflineQueue() {
       const operation = state.offlineQueue.shift();
       try {
         const outcome = await commitSlotOperation(operation);
-        finishSlotOperation(operation, outcome, { queued: true });
+        finishSlotOperation(operation, outcome);
       } catch (error) {
         if (!state.connection) {
           state.offlineQueue.unshift(operation);
@@ -1774,7 +1742,6 @@ async function performDelete(dialog) {
     closeSlotDialog({ restoreFocus: false, silent: true });
     state.focusSlotKey = key;
     scheduleRender();
-    showToast("Offline – die Löschung wird synchronisiert.", "info");
     return;
   }
 
@@ -1789,7 +1756,6 @@ async function performDelete(dialog) {
         state.focusSlotKey = key;
         scheduleRender();
       }
-      showToast("Offline – die Löschung wird synchronisiert.", "info");
       return;
     }
     failSlotOperation(operation, { dialog, error });

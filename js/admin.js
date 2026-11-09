@@ -91,7 +91,6 @@ const state = {
   inAdmin: false,
   authMode: null,
   authExpired: false,
-  connection: true,
   groups: {},
   shifts: {},
   stands: {},
@@ -100,7 +99,6 @@ const state = {
   loaded: new Set(),
   dataUnsubs: new Map(),
   configUnsub: null,
-  connectionUnsub: null,
   renderScheduled: false,
   section: "uebersicht",
   eventDirty: false,
@@ -321,7 +319,7 @@ function markWriteSuccess() {
   renderWriteWarning();
 }
 
-function reportWriteError(error, message = "Speichern fehlgeschlagen. Bitte prüfen Sie die Verbindung und versuchen Sie es erneut.") {
+function reportWriteError(error, message = "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.") {
   console.error(message, error);
   state.writeWarning = `${message} Die Daten können unvollständig sein; nutzen Sie die Datenprüfung auf der Übersicht.`;
   renderWriteWarning();
@@ -331,12 +329,6 @@ function reportWriteError(error, message = "Speichern fehlgeschlagen. Bitte prü
 /* --------------------------------------------------------------------------
    Start, Konfiguration und Sitzung
    -------------------------------------------------------------------------- */
-
-function showDemoBanner() {
-  if (backendMode !== "demo") return;
-  const banner = $("demo-banner");
-  if (banner) banner.hidden = false;
-}
 
 function hideLoading() {
   setHidden($("admin-loading"), true);
@@ -369,16 +361,6 @@ function updateAdminLabels() {
   document.title = state.inAdmin
     ? `${sectionTitle(state.section)} – Admin – Helferplan`
     : "Admin-Bereich – Helferplan";
-}
-
-function renderConnection() {
-  const pill = $("admin-connection");
-  const text = $("admin-connection-text");
-  if (!pill || !text) return;
-
-  pill.classList.toggle("connection--online", state.connection);
-  pill.classList.toggle("connection--offline", !state.connection);
-  text.textContent = state.connection ? "Online" : "Offline";
 }
 
 function showAuth(mode, { expired = false } = {}) {
@@ -474,7 +456,7 @@ function handleConfigError(error) {
   console.error("Konfiguration konnte nicht gelesen werden.", error);
   showFatalError(
     "Die Konfiguration konnte nicht geladen werden.",
-    "Bitte prüfen Sie die Firebase-Konfiguration, die Datenbankregeln und Ihre Internetverbindung."
+    "Bitte laden Sie die Seite neu und versuchen Sie es erneut."
   );
 }
 
@@ -505,22 +487,11 @@ function startDataSubscriptions() {
       (error) => {
         console.error(`Daten konnten nicht gelesen werden: ${path}`, error);
         state.writeWarning =
-          "Ein Teil der Daten konnte nicht gelesen werden. Bitte prüfen Sie die Datenbankregeln und laden Sie die Seite neu.";
+          "Ein Teil der Daten konnte nicht geladen werden. Bitte laden Sie die Seite neu.";
         renderWriteWarning();
       }
     );
     state.dataUnsubs.set(path, unsubscribe);
-  }
-
-  if (!state.connectionUnsub) {
-    state.connectionUnsub = onValue(
-      ref(db, ".info/connected"),
-      (snapshot) => {
-        state.connection = Boolean(snapshot.val());
-        renderConnection();
-      },
-      (error) => console.warn("Verbindungsstatus nicht verfügbar.", error)
-    );
   }
 }
 
@@ -534,15 +505,6 @@ function stopDataSubscriptions() {
   }
   state.dataUnsubs.clear();
 
-  if (state.connectionUnsub) {
-    try {
-      state.connectionUnsub();
-    } catch (error) {
-      console.warn("Verbindungs-Listener konnte nicht beendet werden.", error);
-    }
-    state.connectionUnsub = null;
-  }
-
   state.groups = {};
   state.shifts = {};
   state.stands = {};
@@ -551,7 +513,6 @@ function stopDataSubscriptions() {
   state.loaded.clear();
   state.demandDraft = {};
   state.demandDirty = false;
-  state.connection = true;
 }
 
 function enterAdmin() {
@@ -568,7 +529,6 @@ function enterAdmin() {
   setHidden($("auth-screen"), true);
   setHidden($("admin-app"), false);
   startDataSubscriptions();
-  renderConnection();
   updateAdminLabels();
 
   const hash = normalizeSection(window.location.hash.replace(/^#/, ""));
@@ -733,7 +693,7 @@ async function handleSetupSubmit(event) {
   } catch (error) {
     reportWriteError(
       error,
-      "Das Admin-Passwort konnte nicht gespeichert werden. Bitte prüfen Sie die Verbindung und die Datenbankregeln."
+      "Das Admin-Passwort konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
     );
   } finally {
     setButtonBusy(submit, false);
@@ -1347,7 +1307,7 @@ async function deleteStand(id) {
       } catch (error) {
         reportWriteError(error, "Der Stand konnte nicht vollständig gelöscht werden.");
         throw new Error(
-          "Der Stand konnte nicht vollständig gelöscht werden. Bitte prüfen Sie die Verbindung und nutzen Sie anschließend die Datenprüfung."
+          "Der Stand konnte nicht vollständig gelöscht werden. Bitte versuchen Sie es erneut und nutzen Sie anschließend die Datenprüfung."
         );
       }
     }
@@ -1599,7 +1559,7 @@ async function deleteShift(id) {
       } catch (error) {
         reportWriteError(error, "Die Schicht konnte nicht vollständig gelöscht werden.");
         throw new Error(
-          "Die Schicht konnte nicht vollständig gelöscht werden. Bitte prüfen Sie die Verbindung und nutzen Sie anschließend die Datenprüfung."
+          "Die Schicht konnte nicht vollständig gelöscht werden. Bitte versuchen Sie es erneut und nutzen Sie anschließend die Datenprüfung."
         );
       }
     }
@@ -1834,7 +1794,7 @@ async function deleteGroup(id) {
       } catch (error) {
         reportWriteError(error, "Die Gruppe konnte nicht vollständig gelöscht werden.");
         throw new Error(
-          "Die Gruppe konnte nicht vollständig gelöscht werden. Bitte prüfen Sie die Verbindung und nutzen Sie anschließend die Datenprüfung."
+          "Die Gruppe konnte nicht vollständig gelöscht werden. Bitte versuchen Sie es erneut und nutzen Sie anschließend die Datenprüfung."
         );
       }
     }
@@ -2526,7 +2486,7 @@ async function runIntegrityCheck() {
       } catch (error) {
         reportWriteError(error, "Die Daten konnten nicht vollständig bereinigt werden.");
         throw new Error(
-          "Die Daten konnten nicht vollständig bereinigt werden. Bitte prüfen Sie die Verbindung und versuchen Sie es erneut."
+          "Die Daten konnten nicht vollständig bereinigt werden. Bitte versuchen Sie es erneut."
         );
       }
     }
@@ -2754,7 +2714,7 @@ async function resetEntries() {
       } catch (error) {
         reportWriteError(error, "Die Einträge konnten nicht vollständig zurückgesetzt werden.");
         throw new Error(
-          "Die Einträge konnten nicht vollständig zurückgesetzt werden. Bitte prüfen Sie die Verbindung und die Datenprüfung."
+          "Die Einträge konnten nicht vollständig zurückgesetzt werden. Bitte versuchen Sie es erneut und nutzen Sie die Datenprüfung."
         );
       }
     }
@@ -2806,7 +2766,7 @@ async function resetConfiguration() {
       } catch (error) {
         reportWriteError(error, "Die Konfiguration konnte nicht vollständig zurückgesetzt werden.");
         throw new Error(
-          "Die Konfiguration konnte nicht vollständig zurückgesetzt werden. Bitte prüfen Sie die Verbindung und nutzen Sie anschließend die Datenprüfung."
+          "Die Konfiguration konnte nicht vollständig zurückgesetzt werden. Bitte versuchen Sie es erneut und nutzen Sie anschließend die Datenprüfung."
         );
       }
     }
@@ -2862,7 +2822,7 @@ async function resetEverything() {
 
       if (failed.length > 0) {
         showToast(
-          "Einige Daten konnten nicht gelöscht werden. Bitte prüfen Sie die Firebase Console und die Verbindung.",
+          "Einige Daten konnten nicht gelöscht werden. Bitte versuchen Sie es erneut.",
           "error"
         );
       } else {
@@ -2888,7 +2848,6 @@ function scheduleRender() {
 function renderAll() {
   if (!state.inAdmin) return;
   updateAdminLabels();
-  renderConnection();
   renderDashboard();
   renderGroupOptions();
   renderStands();
@@ -3081,17 +3040,15 @@ function bindEvents() {
 }
 
 function initAdmin() {
-  showDemoBanner();
   initConfirmDialog();
   setupModal("recovery-dialog");
   bindEvents();
   startSessionWatchers();
-  renderConnection();
 
   if (backendMode === "error" || initError) {
     showFatalError(
-      "Firebase konnte nicht geladen werden.",
-      "Bitte prüfen Sie Ihre Internetverbindung sowie die Angaben in js/firebase-config.js."
+      "Der Admin-Bereich konnte nicht geladen werden.",
+      "Bitte laden Sie die Seite neu."
     );
     return;
   }
@@ -3101,8 +3058,8 @@ function initAdmin() {
   window.setTimeout(() => {
     if (state.configLoaded || state.inAdmin) return;
     showFatalError(
-      "Die Verbindung zur Datenbank dauert zu lange.",
-      "Bitte prüfen Sie die Firebase-Konfiguration, die Datenbankregeln und Ihre Internetverbindung. Laden Sie die Seite anschließend neu."
+      "Das Laden dauert zu lange.",
+      "Bitte laden Sie die Seite neu."
     );
   }, 15000);
 }
