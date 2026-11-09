@@ -176,7 +176,7 @@ function bindStaticEvents() {
   document.addEventListener("click", (event) => {
     if (!state.openFilter) return;
     const target = event.target;
-    if (target.closest(".filter")) return;
+    if (target.closest(".filter") || target.closest(".filter-menu")) return;
     closeFilterMenus();
   });
 
@@ -569,23 +569,18 @@ function openFilterMenu(name, focusFirst = false) {
 
   closeFilterMenus();
   state.openFilter = name;
+
+  // Die Filterleiste erzeugt durch backdrop-filter einen eigenen Containing
+  // Block und ist zugleich ein Scroll-Container. Beides würde die feste
+  // Positionierung des Menüs verfälschen, daher hängt es während der Anzeige
+  // direkt an <body>.
+  document.body.append(menu);
+
   menu.hidden = false;
   menu.classList.add("is-floating");
   button.setAttribute("aria-expanded", "true");
 
-  const buttonRect = button.getBoundingClientRect();
-  const menuRect = menu.getBoundingClientRect();
-  const margin = 12;
-  const left = Math.max(
-    margin,
-    Math.min(buttonRect.left, window.innerWidth - menuRect.width - margin)
-  );
-  const top = Math.max(
-    margin,
-    Math.min(buttonRect.bottom + 4, window.innerHeight - menuRect.height - margin)
-  );
-  menu.style.left = `${Math.round(left)}px`;
-  menu.style.top = `${Math.round(top)}px`;
+  positionFilterMenu(menu, button);
 
   const selected = menu.querySelector('[aria-selected="true"]');
   const target = focusFirst
@@ -594,28 +589,54 @@ function openFilterMenu(name, focusFirst = false) {
   target?.focus({ preventScroll: true });
 }
 
-function closeFilterMenus() {
-  if (!state.openFilter) {
-    for (const name of ["stand", "shift", "group"]) {
-      const menu = qs(`#filter-${name}-menu`);
-      const button = qs(`#filter-${name}-btn`);
-      if (menu) {
-        menu.hidden = true;
-        menu.classList.remove("is-floating");
-      }
-      if (button) button.setAttribute("aria-expanded", "false");
-    }
-    return;
+function positionFilterMenu(menu, button) {
+  const margin = 12;
+  const gap = 4;
+  const buttonRect = button.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+
+  const left = Math.max(
+    margin,
+    Math.min(buttonRect.left, window.innerWidth - menuRect.width - margin)
+  );
+
+  // Standardmäßig unter dem Button öffnen. Ist unten nicht genug Platz,
+  // klappt das Menü über dem Button auf, statt aus dem Viewport zu ragen.
+  let top = buttonRect.bottom + gap;
+  if (top + menuRect.height > window.innerHeight - margin) {
+    const above = buttonRect.top - menuRect.height - gap;
+    top =
+      above >= margin
+        ? above
+        : Math.max(margin, window.innerHeight - menuRect.height - margin);
   }
 
-  const name = state.openFilter;
-  const menu = qs(`#filter-${name}-menu`);
-  const button = qs(`#filter-${name}-btn`);
-  if (menu) {
-    menu.hidden = true;
-    menu.classList.remove("is-floating");
+  menu.style.left = `${Math.round(left)}px`;
+  menu.style.top = `${Math.round(top)}px`;
+}
+
+function closeFilterMenus() {
+  const names = state.openFilter ? [state.openFilter] : ["stand", "shift", "group"];
+
+  for (const name of names) {
+    const menu = qs(`#filter-${name}-menu`);
+    const button = qs(`#filter-${name}-btn`);
+
+    if (menu) {
+      menu.hidden = true;
+      menu.classList.remove("is-floating");
+      menu.style.left = "";
+      menu.style.top = "";
+
+      // Zurück in die Filterleiste, damit Aufbau und Reihenfolge im DOM
+      // erhalten bleiben.
+      const home = qs(`.filter[data-filter="${name}"]`);
+      if (home && menu.parentElement !== home) home.append(menu);
+    }
+
+    if (button) button.setAttribute("aria-expanded", "false");
   }
-  if (button) button.setAttribute("aria-expanded", "false");
+
   state.openFilter = null;
 }
 
