@@ -1387,13 +1387,6 @@ svg {
   pointer-events: none;
 }
 
-.share-note {
-  margin: 12px 0 0;
-  color: var(--slate-500);
-  font-size: 11px;
-  text-align: center;
-}
-
 .site-footer {
   display: flex;
   flex-wrap: wrap;
@@ -3008,7 +3001,10 @@ svg {
 
 .print-table {
   width: 100%;
-  border-collapse: collapse;
+  /* Firefox verliert bei border-collapse: collapse die Zellrahmen ab Seite 2.
+     Getrennte Rahmen mit expliziten Linien bleiben auf jeder Seite sichtbar. */
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
   font-size: 8.5pt;
 }
@@ -3016,20 +3012,33 @@ svg {
 .print-table th,
 .print-table td {
   padding: 4px 5px;
-  border: 1px solid #777;
+  /* Untere Linie je Zeile: bleibt auch am Seitenende sichtbar. */
+  border-bottom: 1px solid #555;
+  border-left: 1px solid #555;
   text-align: left;
   vertical-align: top;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.print-table tr:first-child > * {
+  border-top: 1px solid #555;
+}
+
+.print-table tr > :last-child {
+  border-right: 1px solid #555;
 }
 
 .print-table th {
   background: #e8e8e8;
   font-weight: 700;
-  vertical-align: bottom;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .print-table thead th {
   text-align: center;
+  vertical-align: bottom;
 }
 
 .print-table .print-corner,
@@ -3058,6 +3067,7 @@ svg {
 
 .print-stand-name {
   font-weight: 700;
+  hyphens: manual;
 }
 
 .print-stand-group {
@@ -3073,6 +3083,7 @@ svg {
 
 .print-slot {
   line-height: 1.3;
+  hyphens: manual;
 }
 
 .print-slot--free,
@@ -3098,6 +3109,8 @@ svg {
 
 .print-table thead {
   display: table-header-group;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .print-generated {
@@ -3354,8 +3367,17 @@ svg {
 
 @media print {
   @page {
-    size: A4 portrait;
+    size: A4 landscape;
     margin: 14mm;
+  }
+
+  html,
+  body {
+    /* min-height: 100vh from the screen layout forces a second, empty page. */
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body {
@@ -3370,6 +3392,14 @@ svg {
 
   .print-area {
     display: block !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .print-generated {
+    margin-bottom: 0;
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .print-header h1 {

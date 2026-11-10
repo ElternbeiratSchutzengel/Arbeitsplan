@@ -60,7 +60,7 @@ Eine moderne, schlanke und mobil-optimierte Web-App zur einfachen Organisation v
 * Der Schichtplan ist auf einem Smartphone ab 320 px Breite ohne horizontales Scrollen der Hauptseite nutzbar; nur die Filterleiste darf horizontal scrollen.
 * Änderungen sind auf allen geöffneten Geräten ohne manuelles Neuladen sichtbar.
 * Die Anwendung ist vollständig auf Deutsch und für ältere Vereinsmitglieder gut lesbar.
-* Ein Druck- und CSV-Export liefert eine vollständige, weiterverarbeitbare Helferliste.
+* Ein Druck-Export liefert eine vollständige, weiterverarbeitbare Helferliste.
 * Die Admin-Konfiguration lässt sich als JSON sichern und wieder importieren; die Datei enthält keine Helfer-Einträge.
 
 #### 1.3 Zielgruppe
@@ -339,7 +339,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 * **FR-A-53 (MUSS):** „Konfiguration zurücksetzen“ löscht Assignments, Bedarf, Stände, Schichten und Gruppen; Veranstaltungseinstellungen und Admin-Hash bleiben erhalten.
 * **FR-A-54 (MUSS):** „Alles löschen“ löscht alle Event-Daten einschließlich Veranstaltungseinstellungen, Admin-Hash und Audit-Log; danach erscheint die Erstvergabe.
 * **FR-A-55 (MUSS):** Jede Reset-Aktion verlangt eine explizite Bestätigung. Für „Alles löschen“ muss der Admin die Phrase „ALLES LÖSCHEN“ eingeben.
-* **FR-A-56 (MUSS):** Vor dem Reset wird ein Hinweis auf den CSV-Export angezeigt; der Export ist nicht zwingend.
+* **FR-A-56 (MUSS):** Vor dem Reset wird ein Hinweis auf den Druck-/PDF-Export angezeigt; der Export ist nicht zwingend.
 * **FR-A-57 (MUSS):** Reset-Operationen werden als Multi-Path-Update oder `remove()` ausgeführt und sind gegen Fehler abgesichert. Bei Teilfehlern zeigt die App eine verständliche Meldung.
 * **FR-A-58 (MUSS):** Wenn das Audit-Log erhalten bleibt, wird vor dem Löschen ein Reset-Eintrag geschrieben. Wird das Audit-Log gelöscht, entfällt dieser Eintrag.
 * **FR-A-59 (SOLL):** Nach einem Reset bleibt der Admin angemeldet, außer bei „Alles löschen“.
@@ -347,16 +347,9 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 #### 5.8 Export
 
 * **FR-A-60 (MUSS):** Der Admin kann die Helferliste drucken bzw. als PDF speichern. Der Button öffnet den Browser-Druckdialog.
-* **FR-A-61 (MUSS):** Das Drucklayout ist A4 Hochformat mit Veranstaltungsheader (Verein, Veranstaltung, Datum, Ort), Tabelle und Generierungszeitpunkt.
+* **FR-A-61 (MUSS):** Das Drucklayout ist standardmäßig A4 Querformat mit Veranstaltungsheader (Verein, Veranstaltung, Datum, Ort), Tabelle und Generierungszeitpunkt.
 * **FR-A-62 (MUSS):** Die Drucktabelle ist eine Matrix und enthält unabhängig von aktiven Filtern alle Schichten und Stände: Die erste Spalte listet die Stände mit Gruppe, die erste Zeile alle Schichten mit ihren Zeiten. Jede Zelle enthält die belegten Plätze mit Namen; freie Plätze werden als „frei“ ausgegeben.
 * **FR-A-63 (MUSS):** Navigation, Filter, Buttons, WhatsApp-Karte, Footer-Links und Schatten werden im Druck ausgeblendet. Es werden keine Seiten mitten in einer Tabellenzeile umbrochen.
-* **FR-A-64 (MUSS):** Der CSV-Export erzeugt eine Datei mit UTF-8-BOM, Semikolon als Trennzeichen und CRLF-Zeilenenden.
-* **FR-A-65 (MUSS):** CSV-Spalten: `Schicht;Zeit;Stand;Gruppe;Platz;Name;Status`. `Platz` ist 1-basiert. `Status` ist `belegt` oder `frei`.
-* **FR-A-66 (MUSS):** Felder mit Semikolon, Anführungszeichen oder Zeilenumbruch werden korrekt gequotet.
-* **FR-A-67 (MUSS):** Der Dateiname lautet `helferplan_{eventDate}.csv`, z. B. `helferplan_2026-06-14.csv`.
-* **FR-A-68 (SOLL):** Der Export enthält alle Slots inklusive freier Plätze, nicht nur belegte.
-* **FR-A-69 (MUSS):** Der Export ist nur im Admin-Bereich verfügbar.
-* **FR-A-70 (SOLL):** Der CSV-Export wird in Excel und LibreOffice getestet.
 * **FR-A-90 (MUSS):** Der Admin kann die Konfiguration unter „Sicherung“ als JSON exportieren. Die Datei enthält Veranstaltungsdaten, Stände mit Farben und Icons, Gruppen, Schichten und Bedarf. Sie enthält keine Helfer-Einträge, keine Admin-Zugangsdaten und kein Audit-Log. Der Standard-Dateiname lautet `YYYY-MM-DD_Titel.json`, wobei `Titel` der Veranstaltungsname ist.
 * **FR-A-91 (MUSS):** Der Admin kann eine zuvor exportierte Konfigurationsdatei importieren. Die Datei wird vor der Übernahme validiert; Fehler werden verständlich angezeigt, und der Import erfolgt erst nach einer Bestätigung. Importiert werden ausschließlich die Konfigurationsdaten; vorhandene Helfer-Einträge bleiben erhalten, sofern sie weiterhin zu Ständen, Schichten und Bedarf passen, andernfalls werden sie entfernt. Admin-Passwort und Audit-Log bleiben unverändert.
 
@@ -373,7 +366,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 #### 5.10 Admin-Oberfläche
 
 * **FR-A-78 (MUSS):** `admin.html` verwendet dasselbe Designsystem wie die Helfer-Ansicht (Farben, Typografie, Radien, Schatten, Fokusringe).
-* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Drucken & CSV, Sicherung, Passwort ändern, Zurücksetzen und Abmelden.
+* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Drucken, Sicherung, Passwort ändern, Zurücksetzen und Abmelden.
 * **FR-A-80 (MUSS):** Die Navigation ist auf Mobilgeräten horizontal scrollbar; auf Desktop als Tabs oder Seitenleiste.
 * **FR-A-81 (MUSS):** Formulare haben sichtbare Labels, Inline-Validierung, Speichern/Abbrechen und Toast-Feedback.
 * **FR-A-82 (MUSS):** Destruktive Aktionen öffnen einen Bestätigungsdialog mit klarer Konsequenzbeschreibung.
@@ -858,7 +851,6 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * **AC-17 – CRUD Stände/Schichten/Gruppen:** Given ich lege einen Stand, eine Schicht und eine Gruppe an. Then erscheinen sie in der Helfer-Ansicht; Löschen entfernt die zugehörigen Daten nach Bestätigung.
 * **AC-18 – Bedarf reduzieren:** Given ein Stand hat 3 belegte Plätze. When ich den Bedarf auf 2 senke und bestätige. Then wird der überzählige Platz gelöscht und die Belegung zeigt 2/2.
 * **AC-19 – Einträge zurücksetzen:** Given es gibt Einträge. When ich „Einträge zurücksetzen“ bestätige. Then sind alle Assignments gelöscht, die Konfiguration bleibt erhalten und die Zähler stehen auf 0.
-* **AC-20 – CSV-Export:** Given es gibt belegte und freie Plätze. When ich CSV exportiere. Then enthält die Datei alle Slots mit den Spalten aus FR-A-65 und öffnet in Excel korrekt.
 * **AC-21 – Druck/PDF:** Given ich öffne den Druckdialog. Then sind Navigation, Filter und Buttons ausgeblendet und die Helferliste ist als Matrix mit Ständen in der ersten Spalte und Schichten samt Zeiten in der ersten Zeile auf A4 lesbar.
 * **AC-22 – Barrierefreiheit:** Given ich navigiere nur mit der Tastatur. Then sind alle Funktionen erreichbar und der Fokus ist sichtbar.
 * **AC-23 – Mobile 320 px:** Given ich öffne die Seite bei 320 px Breite. Then gibt es keinen horizontalen Überlauf außerhalb der Filterleiste; alle Inhalte sind lesbar.
@@ -889,7 +881,7 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 
 | Risiko | Auswirkung | Maßnahme |
 |---|---|---|
-| Admin-Hash ist öffentlich lesbar | Offline-Brute-Force gegen den Hash möglich; die Konfiguration kann direkt geändert oder gelöscht werden (inkl. Admin-Lockout) | Starkes, einzigartiges Passwort, regelmäßige CSV-/JSON-Exporte, dokumentiertes Restrisiko, spätere Firebase-Auth-Migration |
+| Admin-Hash ist öffentlich lesbar | Offline-Brute-Force gegen den Hash möglich; die Konfiguration kann direkt geändert oder gelöscht werden (inkl. Admin-Lockout) | Starkes, einzigartiges Passwort, regelmäßige Druck-/JSON-Exporte, dokumentiertes Restrisiko, spätere Firebase-Auth-Migration |
 | Keine serverseitige Authentifizierung | Admin-Schutz ist nur UI-Ebene; `sessionStorage` ist manipulierbar | Restrisiko akzeptiert, Admin-Zugang nicht als Sicherheitsgrenze behandeln |
 | Keine serverseitige Geschäftslogik | Business-Regeln (z. B. Slot-Index gegen Bedarf) werden nur clientseitig geprüft; direkte API-Aufrufe können sie umgehen | Security Rules für Struktur und Wertebereiche, App-Validierung, regelmäßige Datenprüfung |
 | Offenes Bearbeitungskonzept | Jeder kann fremde Einträge ändern oder löschen | Gewollt; Audit-Log, regelmäßige Exporte und Admin-Reset; keine Identitätsprüfung |
@@ -934,25 +926,7 @@ Hallo zusammen! Für {eventName} am {eventDate} in {eventLocation} wird noch 1 H
 Hallo zusammen! Für {eventName} am {eventDate} in {eventLocation} ist der Helferplan voll. Vielen Dank an alle, die mithelfen! Hier geht's zum Plan: {url}
 ```
 
-#### B. CSV-Schema
-
-```csv
-Schicht;Zeit;Stand;Gruppe;Platz;Name;Status
-Frühschicht;11:00–14:00;Grill;Aktive;1;Lena Hoffmann;belegt
-Frühschicht;11:00–14:00;Grill;Aktive;2;Jonas Weber;belegt
-Frühschicht;11:00–14:00;Grill;Aktive;3;;frei
-```
-
-* Trennzeichen: Semikolon.
-* Zeilenenden: CRLF.
-* Kodierung: UTF-8 mit BOM.
-* Quoting: Felder mit Semikolon, Anführungszeichen oder Zeilenumbruch werden in Anführungszeichen gesetzt; enthaltene Anführungszeichen werden verdoppelt.
-* `Platz` ist 1-basiert.
-* `Status` ist `belegt` oder `frei`.
-* Zeitformat: `HH:MM–HH:MM` ohne „Uhr“, z. B. `11:00–14:00`.
-* Dateiname: `helferplan_{eventDate}.csv`.
-
-#### C. Reset-Matrix
+#### B. Reset-Matrix
 
 | Aktion | Löscht | Behält | Danach |
 |---|---|---|---|
@@ -960,7 +934,7 @@ Frühschicht;11:00–14:00;Grill;Aktive;3;;frei
 | Konfiguration zurücksetzen | `assignments`, `demand`, `stands`, `shifts`, `groups` | `config` inkl. Admin-Hash | Helfer-Ansicht leer, Admin kann neu anlegen |
 | Alles löschen | alle Event-Daten inkl. `config` und `audit_log` | nichts | Erstvergabe erscheint |
 
-#### D. Deployment-Checkliste
+#### C. Deployment-Checkliste
 
 1. Firebase-Projekt anlegen, Realtime Database aktivieren, Region `europe-west1` wählen.
 2. `database.rules.json` deployen und im Firebase Emulator testen.
@@ -974,7 +948,7 @@ Frühschicht;11:00–14:00;Grill;Aktive;3;;frei
 10. README mit Recovery-, Datenschutz- und Backup-Hinweisen vervollständigen.
 11. Prüfen, dass weder Klartextpasswort noch `adminHash` im Quellcode stehen und `prototypes/` nicht verlinkt wird.
 
-#### E. Icon- und Farb-Keys
+#### D. Icon- und Farb-Keys
 
 **Icons:**
 
@@ -995,7 +969,7 @@ Frühschicht;11:00–14:00;Grill;Aktive;3;;frei
 
 **Farben:** `sky`, `teal`, `indigo`, `rose`, `amber`, `violet`, `emerald`, `slate`.
 
-#### F. Dateistruktur
+#### E. Dateistruktur
 
 ```text
 /

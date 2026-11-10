@@ -62,8 +62,7 @@ import {
   validatePasswordPair,
   validateDemand,
   hasValidAdminCredentials,
-  isUniqueName,
-  escapeCsvField
+  isUniqueName
 } from "./validation.js";
 
 /* --------------------------------------------------------------------------
@@ -630,7 +629,7 @@ function sectionTitle(name) {
     schichten: "Schichten",
     gruppen: "Gruppen",
     bedarf: "Bedarf",
-    export: "Drucken & CSV",
+    export: "Drucken",
     sicherung: "Sicherung",
     passwort: "Passwort ändern",
     zuruecksetzen: "Zurücksetzen"
@@ -2473,7 +2472,7 @@ async function runIntegrityCheck() {
       `Es wurden ${issues.total} ${issues.total === 1 ? "Auffälligkeit" : "Auffälligkeiten"} gefunden:`,
       ...lines,
       "Beim Bereinigen werden ausschließlich die betroffenen ungültigen Einträge entfernt. Gültige Helfer-Einträge bleiben erhalten.",
-      "Bitte laden Sie vorher bei Bedarf den CSV-Export herunter."
+      "Bitte sichern Sie die Helferliste vorher bei Bedarf über „Drucken / PDF“."
     ],
     confirmLabel: "Bereinigen",
     danger: true,
@@ -2602,34 +2601,6 @@ function downloadFile(content, filename, type) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function exportCsv() {
-  const rows = collectExportRows();
-  const header = ["Schicht", "Zeit", "Stand", "Gruppe", "Platz", "Name", "Status"];
-  const lines = [header.join(";")];
-
-  for (const row of rows) {
-    lines.push(
-      [
-        row.shiftName,
-        row.time,
-        row.standName,
-        row.groupName,
-        String(row.slot),
-        row.name,
-        row.status
-      ]
-        .map(escapeCsvField)
-        .join(";")
-    );
-  }
-
-  const csv = `\uFEFF${lines.join("\r\n")}\r\n`;
-  const date = String(state.config.eventDate || "").trim();
-  const filename = date ? `helferplan_${date}.csv` : "helferplan.csv";
-  downloadFile(csv, filename, "text/csv;charset=utf-8");
-  showToast("CSV-Export erstellt.", "success");
 }
 
 function renderConfigExportSummary() {
@@ -3244,7 +3215,7 @@ async function handleConfigImportFile(event) {
   } catch (error) {
     showConfigImportError("Die Datei ist keine gültige JSON-Datei.", [
       "Bitte wählen Sie eine Konfigurationsdatei, die über „Konfiguration exportieren“ erstellt wurde.",
-      "PDF- und CSV-Dateien der Helferliste können nicht importiert werden."
+      "PDF-Dateien der Helferliste können nicht importiert werden."
     ]);
     renderConfigImportState();
     return;
@@ -3474,7 +3445,7 @@ async function resetEntries() {
       includeAudit
         ? "Das Audit-Log wird ebenfalls vollständig gelöscht."
         : "Das Audit-Log bleibt erhalten; vor dem Löschen wird ein Reset-Eintrag geschrieben.",
-      "Bitte laden Sie vorher den CSV-Export herunter, falls Sie die aktuellen Einträge noch benötigen."
+      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter, falls Sie die aktuellen Einträge noch benötigen."
     ],
     confirmLabel: "Einträge zurücksetzen",
     danger: true,
@@ -3514,7 +3485,7 @@ async function resetConfiguration() {
     message: [
       "Helfer-Einträge, Bedarf, Stände, Schichten und Gruppen werden endgültig gelöscht.",
       "Veranstaltungsdaten, Admin-Passwort und Audit-Log bleiben erhalten.",
-      "Bitte laden Sie vorher den CSV-Export herunter, falls Sie die aktuelle Planung noch benötigen."
+      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter, falls Sie die aktuelle Planung noch benötigen."
     ],
     confirmLabel: "Konfiguration zurücksetzen",
     danger: true,
@@ -3566,7 +3537,7 @@ async function resetEverything() {
     message: [
       "Alle Event-Daten werden endgültig gelöscht: Veranstaltungsdaten, Admin-Passwort, Stände, Schichten, Gruppen, Bedarf, Helfer-Einträge und Audit-Log.",
       "Danach erscheint die Erstvergabe und Sie müssen ein neues Admin-Passwort festlegen.",
-      "Diese Aktion kann nicht rückgängig gemacht werden. Bitte laden Sie vorher den CSV-Export herunter."
+      "Diese Aktion kann nicht rückgängig gemacht werden. Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter."
     ],
     confirmLabel: "Alles löschen",
     danger: true,
@@ -3800,7 +3771,6 @@ function bindEvents() {
 
   $("run-integrity-check")?.addEventListener("click", runIntegrityCheck, { signal });
   $("print-button")?.addEventListener("click", printHelferList, { signal });
-  $("csv-button")?.addEventListener("click", exportCsv, { signal });
 
   $("config-export-button")?.addEventListener("click", exportConfiguration, { signal });
   $("config-import-choose")?.addEventListener(

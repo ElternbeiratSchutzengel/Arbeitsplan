@@ -56,7 +56,6 @@
       <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
       <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
       <symbol id="i-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></symbol>
-      <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/></symbol>
       <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
     </defs>
   </svg>
@@ -169,7 +168,7 @@
             <svg class="icon icon-sm" aria-hidden="true"><use href="#i-table"/></svg>Bedarf
           </button>
           <button type="button" class="admin-nav-item" data-section="export">
-            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-printer"/></svg>Drucken &amp; CSV
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-printer"/></svg>Drucken
           </button>
           <button type="button" class="admin-nav-item" data-section="sicherung">
             <svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg>Sicherung
@@ -537,31 +536,28 @@
           </div>
         </section>
 
-        <!-- Helferliste drucken und als CSV exportieren -->
+        <!-- Helferliste drucken -->
         <section class="admin-section" data-panel="export" hidden>
           <div class="admin-page-head">
             <div>
-              <h1 class="admin-page-title">Helferliste drucken &amp; exportieren</h1>
-              <p class="admin-page-subtitle">Helferliste drucken, als PDF speichern oder als CSV exportieren. Die Konfiguration sichern Sie separat unter „Sicherung“.</p>
+              <h1 class="admin-page-title">Helferliste drucken</h1>
+              <p class="admin-page-subtitle">Helferliste drucken oder als PDF speichern. Die Konfiguration sichern Sie separat unter „Sicherung“.</p>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><div><h2>Helferliste</h2><p>Der Export enthält alle Schichten, Stände und Plätze – unabhängig von Filtern.</p></div></div>
+            <div class="panel-head"><div><h2>Helferliste</h2><p>Die Druckansicht enthält alle Schichten, Stände und Plätze – unabhängig von Filtern.</p></div></div>
             <div id="export-summary" class="export-summary">Noch keine Daten geladen.</div>
             <div class="button-row">
               <button type="button" class="btn btn-primary" id="print-button">
                 <svg class="icon icon-sm" aria-hidden="true"><use href="#i-printer"/></svg>Drucken / PDF
-              </button>
-              <button type="button" class="btn btn-secondary" id="csv-button">
-                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-file"/></svg>Helferliste als CSV exportieren
               </button>
             </div>
             <p class="hint">Diese Ausgabe ist die Helferliste. Eine Sicherung der Admin-Konfiguration finden Sie im Bereich „Sicherung“.</p>
           </div>
 
           <div class="panel panel--muted">
-            <div class="panel-head"><div><h2>Hinweis zum Druck</h2><p>Die Druckansicht zeigt eine Matrix mit Ständen als Zeilen und Schichten samt Zeiten als Spalten. Navigation, Filter und Buttons werden automatisch ausgeblendet. Für ein PDF „Als PDF speichern“ als Ziel wählen.</p></div></div>
+            <div class="panel-head"><div><h2>Hinweis zum Druck</h2><p>Die Druckansicht zeigt eine Matrix mit Ständen als Zeilen und Schichten samt Zeiten als Spalten im A4-Querformat. Navigation, Filter und Buttons werden automatisch ausgeblendet. Für ein PDF „Als PDF speichern“ als Ziel wählen.</p></div></div>
           </div>
         </section>
 
@@ -576,7 +572,7 @@
 
           <div class="alert alert-info">
             <svg class="icon icon-sm" aria-hidden="true"><use href="#i-info"/></svg>
-            <span>Diese Funktion ist unabhängig vom PDF- bzw. CSV-Export der Helferliste. Die Konfigurationsdatei enthält keine Helfer-Namen und kein Admin-Passwort.</span>
+            <span>Diese Funktion ist unabhängig vom PDF-Export der Helferliste. Die Konfigurationsdatei enthält keine Helfer-Namen und kein Admin-Passwort.</span>
           </div>
 
           <div class="panel">
@@ -671,7 +667,7 @@
           <div class="admin-page-head">
             <div>
               <h1 class="admin-page-title">Zurücksetzen</h1>
-              <p class="admin-page-subtitle">Bitte vorher den CSV-Export herunterladen. Alle Aktionen sind endgültig.</p>
+              <p class="admin-page-subtitle">Bitte vorher die Helferliste über „Drucken / PDF“ sichern. Alle Aktionen sind endgültig.</p>
             </div>
           </div>
 

@@ -209,11 +209,3 @@ export function isUniqueName(name, entries, { excludeId = null, label = "Name" }
 
   return { valid: true, error: "" };
 }
-
-export function escapeCsvField(value) {
-  const text = String(value ?? "");
-  if (/[";\r\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-  return text;
-}

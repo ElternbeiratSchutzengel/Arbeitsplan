@@ -35,7 +35,7 @@ Die verbindliche Implementierungsspezifikation steht in
 - Bedarfsmatrix bearbeiten; beim Reduzieren werden überzählige Einträge nach
   Bestätigung gelöscht
 - Datenprüfung für verwaiste Einträge und ungültige Gruppenverweise
-- CSV-Export, Druckansicht sowie Import und Export der Konfiguration als JSON
+- Druckansicht sowie Import und Export der Konfiguration als JSON
   (ohne Helfer-Einträge)
 - Passwort ändern sowie abgestufte Reset-Funktionen
 
@@ -59,7 +59,7 @@ Die verbindliche Implementierungsspezifikation steht in
 │   ├── firebase.js             Firebase-SDK bzw. Demo-Backend
 │   ├── firebase-config.js      öffentliche Firebase-Konfiguration
 │   ├── ui.js                   Dialoge, Toasts, Session, Formatierung
-│   └── validation.js           Validierung und CSV-Escaping
+│   └── validation.js           Validierung
 ├── assets/
 │   ├── fonts/                  InterVariable.woff2
 │   ├── favicon.svg
@@ -342,7 +342,7 @@ Manuell zu prüfen:
 5. Admin-Erstvergabe, Login, falsches Passwort, Logout und Session-Timeout.
 6. Stände, Schichten und Gruppen anlegen, sortieren, löschen.
 7. Bedarf erhöhen und reduzieren; Löschbestätigung der überzähligen Plätze.
-8. CSV-, Druck- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
+8. Druck- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
 9. Datenprüfung mit künstlich verwaisten Einträgen.
 10. Alle Reset-Stufen inklusive `ALLES LÖSCHEN` prüfen.
 11. Nach dem Löschen von `config/adminSalt` und `config/adminHash` die
