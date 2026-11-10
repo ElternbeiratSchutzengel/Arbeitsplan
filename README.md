@@ -35,7 +35,8 @@ Die verbindliche Implementierungsspezifikation steht in
 - Bedarfsmatrix bearbeiten; beim Reduzieren werden überzählige Einträge nach
   Bestätigung gelöscht
 - Datenprüfung für verwaiste Einträge und ungültige Gruppenverweise
-- CSV-Export, JSON-Sicherung und Druckansicht
+- CSV-Export, Druckansicht sowie Import und Export der Konfiguration als JSON
+  (ohne Helfer-Einträge)
 - Passwort ändern sowie abgestufte Reset-Funktionen
 
 ## Technik
@@ -65,6 +66,7 @@ Die verbindliche Implementierungsspezifikation steht in
 │   └── og-image.png
 ├── database.rules.json         Security Rules für die RTDB
 ├── firebase.json               Regeln und Emulator-Konfiguration
+├── start.py                    Lokaler HTTP-Server für die Entwicklung
 ├── .gitignore                  Emulator-Logs und node_modules ausblenden
 ├── .nojekyll                   GitHub Pages: Jekyll deaktivieren
 ├── requirements_document.md    verbindliche Spezifikation
@@ -78,6 +80,25 @@ Wegen der ES-Module und `crypto.subtle` muss die Seite über HTTP und möglichst
 über `localhost` geöffnet werden. **Ein Doppelklick auf `index.html`
 (`file:///…`) funktioniert nicht** — der Browser blockiert dann die
 ES-Module, und die Seite bleibt im Lade-Skelett stehen.
+
+Das Startskript übernimmt Serverstart und Browseraufruf:
+
+```bash
+cd Arbeitsplan
+python3 start.py
+```
+
+Es startet einen lokalen Server auf `http://127.0.0.1:8765` und öffnet
+`index.html` automatisch. Beenden mit `Strg+C`.
+
+Optionen:
+
+```bash
+python3 start.py --no-browser      # nur Server starten
+python3 start.py --port 8080       # anderen Port verwenden
+```
+
+Ohne Skript geht es auch direkt über Python:
 
 ```bash
 cd Arbeitsplan
@@ -321,7 +342,7 @@ Manuell zu prüfen:
 5. Admin-Erstvergabe, Login, falsches Passwort, Logout und Session-Timeout.
 6. Stände, Schichten und Gruppen anlegen, sortieren, löschen.
 7. Bedarf erhöhen und reduzieren; Löschbestätigung der überzähligen Plätze.
-8. CSV-, JSON- und Druckausgabe prüfen.
+8. CSV-, Druck- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
 9. Datenprüfung mit künstlich verwaisten Einträgen.
 10. Alle Reset-Stufen inklusive `ALLES LÖSCHEN` prüfen.
 11. Nach dem Löschen von `config/adminSalt` und `config/adminHash` die
@@ -329,8 +350,15 @@ Manuell zu prüfen:
 
 ## Betrieb und Wartung
 
-- **Backups:** Vor größeren Änderungen im Admin-Bereich die JSON-Sicherung
-  herunterladen. Zusätzlich regelmäßig die Firebase Console exportieren.
+- **Backups:** Vor größeren Änderungen im Admin-Bereich unter „Sicherung“ die
+  Konfiguration als JSON herunterladen. Diese Datei enthält Veranstaltungsdaten,
+  Stände, Schichten, Gruppen und Bedarf, aber keine Helfer-Einträge. Für eine
+  vollständige Datensicherung inklusive Helfer-Einträgen die Firebase Console
+  bzw. den Datenbankexport verwenden.
+- **Konfigurationsimport:** Beim Import werden die Einstellungen vollständig
+  ersetzt. Bestehende Helfer-Einträge bleiben erhalten, sofern sie weiterhin zu
+  Ständen, Schichten und Bedarf passen; unpassende Einträge werden nach
+  Bestätigung entfernt.
 - **Aufbewahrung:** Nicht mehr benötigte Veranstaltungsdaten mit „Alles
   löschen“ entfernen; danach ist eine neue Erstvergabe nötig.
 - **Mehrere Veranstaltungen:** Nicht unterstützt. Für eine neue Veranstaltung

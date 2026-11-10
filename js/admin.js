@@ -78,12 +78,18 @@ const SECTIONS = new Set([
   "gruppen",
   "bedarf",
   "export",
+  "sicherung",
   "passwort",
   "zuruecksetzen"
 ]);
 
 const COLOR_KEYS = Object.keys(COLORS);
 const DATA_PATHS = ["groups", "shifts", "stands", "demand", "assignments"];
+const CONFIG_FILE_FORMAT = "helferplan-config";
+const CONFIG_FILE_VERSION = 1;
+const MAX_CONFIG_FILE_BYTES = 5 * 1024 * 1024;
+const UNSAFE_DATABASE_KEY = /[.#$\[\]\/\u0000-\u001F\u007F]/;
+const RESERVED_DATABASE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
 const state = {
   config: {},
@@ -112,7 +118,11 @@ const state = {
   writeWarning: "",
   lastSessionTouch: 0,
   sessionTimer: null,
-  listenerAbort: new AbortController()
+  listenerAbort: new AbortController(),
+  configImportDraft: null,
+  configImportFileName: "",
+  configImportBusy: false,
+  configImportLoadToken: 0
 };
 
 const $ = (id) => document.getElementById(id);
@@ -133,6 +143,21 @@ function isSlotCollection(value) {
 function numberOr(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function dataReady() {
+  return state.configLoaded && DATA_PATHS.every((path) => state.loaded.has(path));
+}
+
+function totalAssignmentCount() {
+  let total = 0;
+  for (const stands of Object.values(state.assignments ?? {})) {
+    if (!isObject(stands)) continue;
+    for (const slots of Object.values(stands)) {
+      if (isSlotCollection(slots)) total += Object.keys(slots).length;
+    }
+  }
+  return total;
 }
 
 /* --------------------------------------------------------------------------
@@ -271,7 +296,8 @@ async function writeAudit({
   standId = null,
   slotIndex = null,
   oldValue = null,
-  newValue = null
+  newValue = null,
+  source = "ui"
 }) {
   const entry = {
     ts: Date.now(),
@@ -279,7 +305,7 @@ async function writeAudit({
     entity,
     entityId: entityId === null ? "" : String(entityId),
     actor: "admin",
-    source: "ui"
+    source
   };
 
   if (shiftId !== null) entry.shiftId = shiftId;
@@ -513,6 +539,13 @@ function stopDataSubscriptions() {
   state.loaded.clear();
   state.demandDraft = {};
   state.demandDirty = false;
+  state.configImportLoadToken += 1;
+  state.configImportDraft = null;
+  state.configImportFileName = "";
+  state.configImportBusy = false;
+  const importInput = $("config-import-file");
+  if (importInput) importInput.value = "";
+  clearConfigImportError();
 }
 
 function enterAdmin() {
@@ -597,7 +630,8 @@ function sectionTitle(name) {
     schichten: "Schichten",
     gruppen: "Gruppen",
     bedarf: "Bedarf",
-    export: "Export",
+    export: "Drucken & CSV",
+    sicherung: "Sicherung",
     passwort: "Passwort ändern",
     zuruecksetzen: "Zurücksetzen"
   }[name] ?? "Übersicht";
@@ -637,6 +671,9 @@ function activateSection(name, { focus = true, updateHash = true } = {}) {
     renderDemand();
   } else if (section === "export") {
     renderExportSummary();
+  } else if (section === "sicherung") {
+    renderConfigExportSummary();
+    renderConfigImportState();
   }
 
   updateAdminLabels();
@@ -2595,26 +2632,728 @@ function exportCsv() {
   showToast("CSV-Export erstellt.", "success");
 }
 
-function exportJson() {
-  const config = { ...state.config };
-  delete config.adminSalt;
-  delete config.adminHash;
+function renderConfigExportSummary() {
+  const summary = $("config-export-summary");
+  const button = $("config-export-button");
+  if (!summary) return;
 
-  const backup = {
-    exportVersion: 1,
+  if (!dataReady()) {
+    summary.textContent = "Daten werden geladen …";
+    if (button) button.disabled = true;
+    return;
+  }
+
+  const shifts = sortedShifts();
+  const stands = sortedStands();
+  const groups = sortedGroups();
+  let slots = 0;
+  for (const [shiftId] of shifts) {
+    for (const [standId] of stands) {
+      slots += getDemandValue(shiftId, standId);
+    }
+  }
+
+  const date = formatEventDate(state.config.eventDate);
+  const parts = [
+    `Konfiguration für ${String(state.config.eventName || "die Veranstaltung")}`,
+    ...(date ? [date] : []),
+    `${stands.length} ${stands.length === 1 ? "Stand" : "Stände"}`,
+    `${shifts.length} ${shifts.length === 1 ? "Schicht" : "Schichten"}`,
+    `${groups.length} ${groups.length === 1 ? "Gruppe" : "Gruppen"}`,
+    `${slots} ${slots === 1 ? "Platz" : "Plätze"}`
+  ];
+  summary.textContent = parts.join(" · ");
+  if (button) button.disabled = false;
+}
+
+function configExportFileName() {
+  const eventDate = String(state.config.eventDate || "").trim();
+  const datePart = /^\d{4}-\d{2}-\d{2}$/.test(eventDate)
+    ? eventDate
+    : new Date().toISOString().slice(0, 10);
+  const title =
+    String(state.config.eventName || "Helferplan")
+      .trim()
+      .replace(/[\\/:*?"<>|\u0000-\u001F\u007F]/g, "_")
+      .replace(/\s+/g, " ")
+      .replace(/_+/g, "_")
+      .replace(/^[_.\s]+|[_.\s]+$/g, "")
+      .slice(0, 80)
+      .replace(/[_.\s]+$/g, "") || "Helferplan";
+
+  return `${datePart}_${title}.json`;
+}
+
+function exportConfiguration() {
+  if (!dataReady()) {
+    showToast("Die Daten werden noch geladen. Bitte versuchen Sie es gleich erneut.", "info");
+    return;
+  }
+
+  const payload = {
+    format: CONFIG_FILE_FORMAT,
+    formatVersion: CONFIG_FILE_VERSION,
     exportedAt: new Date().toISOString(),
-    event: config,
-    groups: cloneData(state.groups),
-    shifts: cloneData(state.shifts),
-    stands: cloneData(state.stands),
-    demand: cloneData(state.demand),
-    assignments: cloneData(state.assignments)
+    event: {
+      clubName: String(state.config.clubName ?? ""),
+      eventName: String(state.config.eventName ?? ""),
+      eventDate: String(state.config.eventDate ?? ""),
+      eventLocation: String(state.config.eventLocation ?? ""),
+      tagline: String(state.config.tagline ?? "")
+    },
+    groups: cloneData(state.groups) ?? {},
+    shifts: cloneData(state.shifts) ?? {},
+    stands: cloneData(state.stands) ?? {},
+    demand: cloneData(state.demand) ?? {}
   };
 
-  const date = String(state.config.eventDate || "").trim();
-  const filename = date ? `helferplan-sicherung_${date}.json` : "helferplan-sicherung.json";
-  downloadFile(JSON.stringify(backup, null, 2), filename, "application/json;charset=utf-8");
-  showToast("JSON-Sicherung erstellt. Admin-Zugangsdaten sind nicht enthalten.", "success");
+  downloadFile(
+    JSON.stringify(payload, null, 2),
+    configExportFileName(),
+    "application/json;charset=utf-8"
+  );
+  showToast("Konfiguration exportiert. Die Datei enthält keine Helfer-Einträge und kein Admin-Passwort.", "success");
+}
+
+/* --------------------------------------------------------------------------
+   Konfiguration importieren
+   -------------------------------------------------------------------------- */
+
+function isSafeDatabaseKey(value) {
+  return (
+    typeof value === "string" &&
+    value.length >= 1 &&
+    value.length <= 200 &&
+    !RESERVED_DATABASE_KEYS.has(value) &&
+    !UNSAFE_DATABASE_KEY.test(value)
+  );
+}
+
+function hasOwn(object, key) {
+  return Object.prototype.hasOwnProperty.call(object, key);
+}
+
+function normalizeImportedEvent(raw, errors) {
+  if (!isObject(raw)) {
+    errors.push("Die Datei enthält keine gültigen Veranstaltungsdaten.");
+    return null;
+  }
+
+  const club = validateText(raw.clubName, { min: 1, max: 80, label: "Vereinsname" });
+  const name = validateText(raw.eventName, { min: 1, max: 80, label: "Veranstaltungsname" });
+  const date = validateEventDate(raw.eventDate);
+  const location = validateText(raw.eventLocation, { min: 1, max: 120, label: "Ort" });
+  const tagline = validateText(raw.tagline, {
+    min: 0,
+    max: 160,
+    label: "Tagline",
+    optional: true
+  });
+
+  if (!club.valid) errors.push(club.error);
+  if (!name.valid) errors.push(name.error);
+  if (!date.valid) errors.push(date.error);
+  if (!location.valid) errors.push(location.error);
+  if (!tagline.valid) errors.push(tagline.error);
+
+  return {
+    clubName: club.value,
+    eventName: name.value,
+    eventDate: date.value,
+    eventLocation: location.value,
+    tagline: tagline.value
+  };
+}
+
+function normalizeImportedGroups(raw, errors) {
+  const groups = {};
+  if (raw === undefined || raw === null) return groups;
+  if (!isObject(raw)) {
+    errors.push("Der Bereich „Gruppen“ ist ungültig.");
+    return groups;
+  }
+
+  for (const [id, group] of Object.entries(raw)) {
+    if (!isSafeDatabaseKey(id)) {
+      errors.push(`Ungültige Gruppen-ID „${String(id)}“.`);
+      continue;
+    }
+    if (!isObject(group)) {
+      errors.push(`Die Gruppe „${String(group?.name ?? id)}“ ist ungültig.`);
+      continue;
+    }
+
+    const name = validateText(group.name, { min: 2, max: 40, label: "Gruppenname" });
+    const color = String(group.color ?? "");
+    const order = Number(group.order);
+    let valid = true;
+
+    if (!name.valid) {
+      errors.push(name.error);
+      valid = false;
+    }
+    if (!COLOR_KEYS.includes(color)) {
+      errors.push(`Die Gruppe „${name.value || id}“ hat eine ungültige Farbe.`);
+      valid = false;
+    }
+    if (!Number.isInteger(order) || order < 0) {
+      errors.push(`Die Gruppe „${name.value || id}“ hat eine ungültige Reihenfolge.`);
+      valid = false;
+    }
+
+    if (valid) groups[id] = { name: name.value, color, order };
+  }
+
+  return groups;
+}
+
+function normalizeImportedShifts(raw, errors) {
+  const shifts = {};
+  if (raw === undefined || raw === null) return shifts;
+  if (!isObject(raw)) {
+    errors.push("Der Bereich „Schichten“ ist ungültig.");
+    return shifts;
+  }
+
+  for (const [id, shift] of Object.entries(raw)) {
+    if (!isSafeDatabaseKey(id)) {
+      errors.push(`Ungültige Schicht-ID „${String(id)}“.`);
+      continue;
+    }
+    if (!isObject(shift)) {
+      errors.push(`Die Schicht „${String(shift?.name ?? id)}“ ist ungültig.`);
+      continue;
+    }
+
+    const name = validateText(shift.name, { min: 2, max: 60, label: "Schichtname" });
+    const start = String(shift.start ?? "");
+    const end = String(shift.end ?? "");
+    const times = validateShiftTimes(start, end);
+    const order = Number(shift.order);
+    let valid = true;
+
+    if (!name.valid) {
+      errors.push(name.error);
+      valid = false;
+    }
+    if (!times.valid) {
+      errors.push(`Die Schicht „${name.value || id}“ hat ungültige Zeiten. ${times.error}`);
+      valid = false;
+    }
+    if (!Number.isInteger(order) || order < 0) {
+      errors.push(`Die Schicht „${name.value || id}“ hat eine ungültige Reihenfolge.`);
+      valid = false;
+    }
+
+    if (valid) shifts[id] = { name: name.value, start, end, order };
+  }
+
+  return shifts;
+}
+
+function normalizeImportedStands(raw, groups, errors) {
+  const stands = {};
+  if (raw === undefined || raw === null) return stands;
+  if (!isObject(raw)) {
+    errors.push("Der Bereich „Stände“ ist ungültig.");
+    return stands;
+  }
+
+  for (const [id, stand] of Object.entries(raw)) {
+    if (!isSafeDatabaseKey(id)) {
+      errors.push(`Ungültige Stand-ID „${String(id)}“.`);
+      continue;
+    }
+    if (!isObject(stand)) {
+      errors.push(`Der Stand „${String(stand?.name ?? id)}“ ist ungültig.`);
+      continue;
+    }
+
+    const name = validateText(stand.name, { min: 2, max: 60, label: "Standname" });
+    const icon = String(stand.icon ?? "");
+    const color = String(stand.color ?? "");
+    const order = Number(stand.order);
+    const rawGroupId = stand.groupId;
+    let groupId = null;
+    let valid = true;
+
+    if (!name.valid) {
+      errors.push(name.error);
+      valid = false;
+    }
+    if (!ICON_NAMES.has(icon)) {
+      errors.push(`Der Stand „${name.value || id}“ hat ein ungültiges Icon.`);
+      valid = false;
+    }
+    if (!COLOR_KEYS.includes(color)) {
+      errors.push(`Der Stand „${name.value || id}“ hat eine ungültige Farbe.`);
+      valid = false;
+    }
+    if (!Number.isInteger(order) || order < 0) {
+      errors.push(`Der Stand „${name.value || id}“ hat eine ungültige Reihenfolge.`);
+      valid = false;
+    }
+    if (rawGroupId !== undefined && rawGroupId !== null && rawGroupId !== "") {
+      if (typeof rawGroupId !== "string" || !hasOwn(groups, rawGroupId)) {
+        errors.push(`Der Stand „${name.value || id}“ verweist auf eine unbekannte Gruppe.`);
+        valid = false;
+      } else {
+        groupId = rawGroupId;
+      }
+    }
+
+    if (valid) stands[id] = { name: name.value, icon, color, order, groupId };
+  }
+
+  return stands;
+}
+
+function normalizeImportedDemand(raw, shifts, stands, errors, warnings) {
+  const demand = {};
+  if (raw === undefined || raw === null) return demand;
+  if (!isObject(raw)) {
+    errors.push("Der Bereich „Bedarf“ ist ungültig.");
+    return demand;
+  }
+
+  let ignored = 0;
+  for (const [shiftId, standValues] of Object.entries(raw)) {
+    if (!isSafeDatabaseKey(shiftId) || !hasOwn(shifts, shiftId) || !isObject(standValues)) {
+      ignored += isObject(standValues) ? Object.keys(standValues).length : 1;
+      continue;
+    }
+
+    const row = {};
+    for (const [standId, rawValue] of Object.entries(standValues)) {
+      if (!isSafeDatabaseKey(standId) || !hasOwn(stands, standId)) {
+        ignored += 1;
+        continue;
+      }
+      const result = validateDemand(rawValue);
+      if (!result.valid) {
+        errors.push(
+          `Bedarf für „${stands[standId].name}“ in „${shifts[shiftId].name}“: ${result.error}`
+        );
+        continue;
+      }
+      row[standId] = result.value;
+    }
+
+    if (Object.keys(row).length > 0) demand[shiftId] = row;
+  }
+
+  if (ignored > 0) {
+    warnings.push(
+      `${ignored} ${ignored === 1 ? "Bedarfseintrag verweist" : "Bedarfseinträge verweisen"} auf unbekannte Stände oder Schichten und ${ignored === 1 ? "wird" : "werden"} ignoriert.`
+    );
+  }
+
+  return demand;
+}
+
+function parseConfigFile(raw) {
+  const errors = [];
+  const warnings = [];
+
+  if (!isObject(raw)) {
+    return { valid: false, errors: ["Die Datei enthält kein gültiges JSON-Objekt."], warnings, data: null };
+  }
+
+  if (raw.format !== CONFIG_FILE_FORMAT) {
+    return {
+      valid: false,
+      errors: ["Die Datei ist keine Helferplan-Konfiguration. Bitte wählen Sie eine Konfigurationsdatei im JSON-Format."],
+      warnings,
+      data: null
+    };
+  }
+
+  const eventSource = isObject(raw.event) ? raw.event : isObject(raw.config) ? raw.config : null;
+  if (!eventSource) {
+    return {
+      valid: false,
+      errors: ["Die Datei enthält keine Veranstaltungsdaten und ist daher keine vollständige Helferplan-Konfiguration."],
+      warnings,
+      data: null
+    };
+  }
+
+  const missingSections = ["groups", "shifts", "stands", "demand"].filter(
+    (key) => !(key in raw)
+  );
+  if (missingSections.length > 0) {
+    return {
+      valid: false,
+      errors: [
+        "Die Konfigurationsdatei ist unvollständig. Bitte verwenden Sie eine Datei, die über „Konfiguration exportieren“ erstellt wurde."
+      ],
+      warnings,
+      data: null
+    };
+  }
+
+  const version = Number(raw.formatVersion ?? 0);
+  if (Number.isFinite(version) && version > CONFIG_FILE_VERSION) {
+    warnings.push("Die Datei stammt aus einer neueren Version. Der Import wird versucht; prüfen Sie anschließend die Daten.");
+  }
+
+  const event = normalizeImportedEvent(eventSource, errors);
+  const groups = normalizeImportedGroups(raw.groups, errors);
+  const shifts = normalizeImportedShifts(raw.shifts, errors);
+  const stands = normalizeImportedStands(raw.stands, groups, errors);
+  const demand = normalizeImportedDemand(raw.demand, shifts, stands, errors, warnings);
+
+  if (isObject(raw.assignments) && Object.keys(raw.assignments).length > 0) {
+    warnings.push(
+      "Helfer-Einträge in der Datei werden nicht importiert. Vorhandene Helfer-Einträge bleiben erhalten, sofern sie zur importierten Konfiguration passen."
+    );
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors, warnings, data: null };
+  }
+
+  let slots = 0;
+  for (const [shiftId] of Object.entries(shifts)) {
+    for (const [standId] of Object.entries(stands)) {
+      slots += Number(demand?.[shiftId]?.[standId] ?? 0);
+    }
+  }
+
+  const exportedAtMs = Date.parse(String(raw.exportedAt ?? ""));
+  return {
+    valid: true,
+    errors,
+    warnings,
+    data: { event, groups, shifts, stands, demand },
+    summary: {
+      exportedAt: Number.isFinite(exportedAtMs) ? formatDateTime(exportedAtMs) : "",
+      slots,
+      standCount: Object.keys(stands).length,
+      shiftCount: Object.keys(shifts).length,
+      groupCount: Object.keys(groups).length
+    }
+  };
+}
+
+function collectImportAssignmentCleanup(draft) {
+  const paths = [];
+  const { shifts, stands, demand } = draft.data;
+
+  for (const [shiftId, standMap] of Object.entries(state.assignments ?? {})) {
+    if (!hasOwn(shifts, shiftId) || !isObject(standMap)) {
+      paths.push(shiftId);
+      continue;
+    }
+
+    for (const [standId, slots] of Object.entries(standMap)) {
+      if (!hasOwn(stands, standId) || !isSlotCollection(slots)) {
+        paths.push(`${shiftId}/${standId}`);
+        continue;
+      }
+
+      const demandValue = numberOr(demand?.[shiftId]?.[standId], 0);
+      for (const [slotIndex] of Object.entries(slots)) {
+        const slot = Number(slotIndex);
+        if (!Number.isInteger(slot) || slot < 0 || slot >= demandValue) {
+          paths.push(`${shiftId}/${standId}/${slotIndex}`);
+        }
+      }
+    }
+  }
+
+  return paths;
+}
+
+function removeLocalAssignmentPaths(paths) {
+  for (const path of paths) {
+    const [shiftId, standId, slotIndex] = path.split("/");
+    if (!shiftId) continue;
+    if (standId === undefined) {
+      delete state.assignments[shiftId];
+      continue;
+    }
+    if (slotIndex === undefined) {
+      if (state.assignments[shiftId]) delete state.assignments[shiftId][standId];
+      continue;
+    }
+    if (state.assignments?.[shiftId]?.[standId]) {
+      delete state.assignments[shiftId][standId][slotIndex];
+    }
+  }
+}
+
+function showConfigImportError(message, details = []) {
+  const box = $("config-import-error");
+  if (!box) return;
+
+  clearElement(box);
+  const content = createEl("div");
+  content.append(createEl("strong", "", message));
+  if (details.length > 0) {
+    const list = createEl("ul", "import-error-list");
+    for (const detail of details.slice(0, 8)) {
+      list.append(createEl("li", "", detail));
+    }
+    if (details.length > 8) {
+      list.append(createEl("li", "", `… und ${details.length - 8} weitere Fehler.`));
+    }
+    content.append(list);
+  }
+  box.append(uiIcon("alert", "icon icon-sm"), content);
+  box.hidden = false;
+}
+
+function clearConfigImportError() {
+  const box = $("config-import-error");
+  if (!box) return;
+  box.hidden = true;
+  clearElement(box);
+}
+
+function renderConfigImportState() {
+  const preview = $("config-import-preview");
+  const summary = $("config-import-summary");
+  const warnings = $("config-import-warnings");
+  const importButton = $("config-import-button");
+  const clearButton = $("config-import-clear");
+  const filename = $("config-import-filename");
+  const draft = state.configImportDraft;
+
+  if (filename) {
+    filename.textContent = state.configImportFileName || "Keine Datei ausgewählt";
+  }
+
+  if (!draft) {
+    setHidden(preview, true);
+    if (summary) summary.textContent = "";
+    if (warnings) {
+      clearElement(warnings);
+      warnings.hidden = true;
+    }
+    if (importButton) importButton.disabled = true;
+    if (clearButton) clearButton.disabled = !state.configImportFileName;
+    return;
+  }
+
+  setHidden(preview, false);
+  const info = draft.summary ?? {};
+  const event = draft.data.event;
+  const parts = [
+    `${event.eventName} · ${event.clubName}`,
+    formatEventDate(event.eventDate) || event.eventDate,
+    event.eventLocation,
+    `${info.standCount ?? 0} ${info.standCount === 1 ? "Stand" : "Stände"}`,
+    `${info.shiftCount ?? 0} ${info.shiftCount === 1 ? "Schicht" : "Schichten"}`,
+    `${info.groupCount ?? 0} ${info.groupCount === 1 ? "Gruppe" : "Gruppen"}`,
+    `${info.slots ?? 0} ${info.slots === 1 ? "Platz" : "Plätze"}`
+  ];
+  if (info.exportedAt) parts.push(`Exportiert am ${info.exportedAt}`);
+  if (summary) summary.textContent = parts.join(" · ");
+
+  const messages = [...draft.warnings];
+  const cleanup = dataReady() ? collectImportAssignmentCleanup(draft) : [];
+  const currentAssignments = totalAssignmentCount();
+  if (dataReady() && currentAssignments > 0) {
+    if (cleanup.length > 0) {
+      messages.push(
+        cleanup.length === 1
+          ? `1 von ${currentAssignments} bestehenden Helfer-Einträgen wird beim Import entfernt, weil er nicht mehr zu Ständen, Schichten oder Bedarf passt.`
+          : `${cleanup.length} von ${currentAssignments} bestehenden Helfer-Einträgen werden beim Import entfernt, weil sie nicht mehr zu Ständen, Schichten oder Bedarf passen.`
+      );
+    } else {
+      messages.push(
+        currentAssignments === 1
+          ? "Der bestehende Helfer-Eintrag passt weiterhin zur importierten Konfiguration und bleibt erhalten."
+          : `Alle ${currentAssignments} bestehenden Helfer-Einträge passen weiterhin zur importierten Konfiguration und bleiben erhalten.`
+      );
+    }
+  }
+
+  if (warnings) {
+    clearElement(warnings);
+    if (messages.length > 0) {
+      for (const message of messages) {
+        warnings.append(createEl("li", "", message));
+      }
+      warnings.hidden = false;
+    } else {
+      warnings.hidden = true;
+    }
+  }
+
+  if (importButton) importButton.disabled = !dataReady() || state.configImportBusy;
+  if (clearButton) clearButton.disabled = state.configImportBusy;
+}
+
+function clearConfigImportSelection({ resetInput = true } = {}) {
+  state.configImportLoadToken += 1;
+  state.configImportDraft = null;
+  state.configImportFileName = "";
+  state.configImportBusy = false;
+
+  const input = $("config-import-file");
+  if (resetInput && input) input.value = "";
+
+  clearConfigImportError();
+  renderConfigImportState();
+}
+
+async function handleConfigImportFile(event) {
+  const file = event.target.files?.[0] ?? null;
+  if (!file) {
+    clearConfigImportSelection({ resetInput: false });
+    return;
+  }
+
+  const token = state.configImportLoadToken + 1;
+  state.configImportLoadToken = token;
+  state.configImportDraft = null;
+  state.configImportFileName = file.name;
+  state.configImportBusy = false;
+  clearConfigImportError();
+  renderConfigImportState();
+
+  if (file.size > MAX_CONFIG_FILE_BYTES) {
+    showConfigImportError("Die Datei ist zu groß.", [
+      "Bitte wählen Sie eine Konfigurationsdatei mit höchstens 5 MB."
+    ]);
+    renderConfigImportState();
+    return;
+  }
+
+  let text = "";
+  try {
+    text = await file.text();
+  } catch (error) {
+    console.error("Konfigurationsdatei konnte nicht gelesen werden.", error);
+    if (token === state.configImportLoadToken) {
+      showConfigImportError("Die Datei konnte nicht gelesen werden.", [
+        "Bitte wählen Sie die Datei erneut aus."
+      ]);
+      renderConfigImportState();
+    }
+    return;
+  }
+
+  if (token !== state.configImportLoadToken) return;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    showConfigImportError("Die Datei ist keine gültige JSON-Datei.", [
+      "Bitte wählen Sie eine Konfigurationsdatei, die über „Konfiguration exportieren“ erstellt wurde.",
+      "PDF- und CSV-Dateien der Helferliste können nicht importiert werden."
+    ]);
+    renderConfigImportState();
+    return;
+  }
+
+  const result = parseConfigFile(parsed);
+  if (!result.valid) {
+    showConfigImportError("Die Konfigurationsdatei ist ungültig.", result.errors);
+    renderConfigImportState();
+    return;
+  }
+
+  state.configImportDraft = result;
+  renderConfigImportState();
+}
+
+async function handleConfigImport() {
+  const draft = state.configImportDraft;
+  if (!draft || state.configImportBusy) return;
+
+  if (!dataReady()) {
+    showToast("Die Daten werden noch geladen. Bitte versuchen Sie es gleich erneut.", "info");
+    return;
+  }
+
+  const cleanup = collectImportAssignmentCleanup(draft);
+  const currentAssignments = totalAssignmentCount();
+  const event = draft.data.event;
+
+  await confirmAction({
+    title: "Konfiguration importieren?",
+    message: [
+      `Die aktuelle Konfiguration wird vollständig durch „${event.eventName}“ (${event.clubName}) ersetzt.`,
+      `Enthalten sind ${draft.summary.standCount} ${draft.summary.standCount === 1 ? "Stand" : "Stände"}, ${draft.summary.shiftCount} ${draft.summary.shiftCount === 1 ? "Schicht" : "Schichten"}, ${draft.summary.groupCount} ${draft.summary.groupCount === 1 ? "Gruppe" : "Gruppen"} und ${draft.summary.slots} ${draft.summary.slots === 1 ? "Platz" : "Plätze"}.`,
+      cleanup.length > 0
+        ? `${cleanup.length} von ${currentAssignments} bestehenden Helfer-Einträgen passen nicht mehr zur neuen Konfiguration und werden entfernt.`
+        : currentAssignments > 0
+          ? `Alle ${currentAssignments} bestehenden Helfer-Einträge passen weiterhin zur neuen Konfiguration und bleiben erhalten.`
+          : "Es sind keine Helfer-Einträge vorhanden.",
+      "Admin-Passwort und Audit-Log bleiben unverändert. Der Import kann nicht rückgängig gemacht werden."
+    ],
+    confirmLabel: "Konfiguration importieren",
+    danger: true,
+    onConfirm: async () => {
+      state.configImportBusy = true;
+      renderConfigImportState();
+
+      const updates = {};
+      for (const [key, value] of Object.entries(draft.data.event)) {
+        updates[`config/${key}`] = value;
+      }
+      updates.groups = Object.keys(draft.data.groups).length > 0 ? cloneData(draft.data.groups) : null;
+      updates.shifts = Object.keys(draft.data.shifts).length > 0 ? cloneData(draft.data.shifts) : null;
+      updates.stands = Object.keys(draft.data.stands).length > 0 ? cloneData(draft.data.stands) : null;
+      updates.demand = Object.keys(draft.data.demand).length > 0 ? cloneData(draft.data.demand) : null;
+      for (const path of cleanup) {
+        updates[`assignments/${path}`] = null;
+      }
+
+      try {
+        const oldCounts = {
+          stands: Object.keys(state.stands).length,
+          shifts: Object.keys(state.shifts).length,
+          groups: Object.keys(state.groups).length
+        };
+
+        await update(ref(db), updates);
+        await writeAudit({
+          action: "update",
+          entity: "config",
+          entityId: "import_configuration",
+          oldValue: oldCounts,
+          newValue: {
+            stands: draft.summary.standCount,
+            shifts: draft.summary.shiftCount,
+            groups: draft.summary.groupCount
+          },
+          source: "import"
+        });
+
+        state.config = { ...state.config, ...draft.data.event };
+        state.groups = cloneData(draft.data.groups);
+        state.shifts = cloneData(draft.data.shifts);
+        state.stands = cloneData(draft.data.stands);
+        state.demand = cloneData(draft.data.demand);
+        removeLocalAssignmentPaths(cleanup);
+        state.demandDraft = {};
+        state.demandDirty = false;
+        state.demandShowErrors = false;
+        state.eventDirty = false;
+        closeStandEditor();
+        closeShiftEditor();
+        closeGroupEditor();
+        populateEventForm(true);
+        syncDemandDraft();
+        markWriteSuccess();
+        clearConfigImportSelection();
+        renderAll();
+        showToast("Konfiguration importiert.", "success");
+      } catch (error) {
+        state.configImportBusy = false;
+        renderConfigImportState();
+        reportWriteError(error, "Die Konfiguration konnte nicht importiert werden.");
+        throw new Error(
+          "Die Konfiguration konnte nicht importiert werden. Bitte prüfen Sie die Verbindung und versuchen Sie es erneut."
+        );
+      }
+    }
+  });
 }
 
 function preparePrintView() {
@@ -2903,6 +3642,8 @@ function renderAll() {
   renderGroups();
   renderDemand();
   renderExportSummary();
+  renderConfigExportSummary();
+  renderConfigImportState();
 }
 
 function bindEvents() {
@@ -3060,7 +3801,16 @@ function bindEvents() {
   $("run-integrity-check")?.addEventListener("click", runIntegrityCheck, { signal });
   $("print-button")?.addEventListener("click", printHelferList, { signal });
   $("csv-button")?.addEventListener("click", exportCsv, { signal });
-  $("json-button")?.addEventListener("click", exportJson, { signal });
+
+  $("config-export-button")?.addEventListener("click", exportConfiguration, { signal });
+  $("config-import-choose")?.addEventListener(
+    "click",
+    () => $("config-import-file")?.click(),
+    { signal }
+  );
+  $("config-import-file")?.addEventListener("change", handleConfigImportFile, { signal });
+  $("config-import-clear")?.addEventListener("click", () => clearConfigImportSelection(), { signal });
+  $("config-import-button")?.addEventListener("click", handleConfigImport, { signal });
 
   $("reset-entries-button")?.addEventListener("click", resetEntries, { signal });
   $("reset-config-button")?.addEventListener("click", resetConfiguration, { signal });

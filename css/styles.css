@@ -2886,6 +2886,52 @@ svg {
 }
 
 /* --------------------------------------------------------------------------
+   Admin – Konfiguration importieren/exportieren
+   -------------------------------------------------------------------------- */
+
+.import-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px dashed var(--slate-300);
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+}
+
+.import-file-name {
+  color: var(--slate-600);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.import-warnings {
+  margin: 0 0 16px;
+  padding: 12px 14px 12px 32px;
+  border: 1px solid var(--amber-200);
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  color: var(--amber-800);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.import-warnings:empty {
+  display: none;
+}
+
+.import-warnings li + li {
+  margin-top: 4px;
+}
+
+.import-error-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+/* --------------------------------------------------------------------------
    Admin – Zurücksetzen
    -------------------------------------------------------------------------- */
 

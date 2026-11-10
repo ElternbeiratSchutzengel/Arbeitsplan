@@ -19,6 +19,10 @@ pnpm-debug.log*
 .cache/
 coverage/
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Umgebungsvariablen und Zugangsdaten
 .env
 .env.*

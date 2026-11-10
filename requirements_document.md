@@ -61,6 +61,7 @@ Eine moderne, schlanke und mobil-optimierte Web-App zur einfachen Organisation v
 * Änderungen sind auf allen geöffneten Geräten ohne manuelles Neuladen sichtbar.
 * Die Anwendung ist vollständig auf Deutsch und für ältere Vereinsmitglieder gut lesbar.
 * Ein Druck- und CSV-Export liefert eine vollständige, weiterverarbeitbare Helferliste.
+* Die Admin-Konfiguration lässt sich als JSON sichern und wieder importieren; die Datei enthält keine Helfer-Einträge.
 
 #### 1.3 Zielgruppe
 
@@ -356,6 +357,8 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 * **FR-A-68 (SOLL):** Der Export enthält alle Slots inklusive freier Plätze, nicht nur belegte.
 * **FR-A-69 (MUSS):** Der Export ist nur im Admin-Bereich verfügbar.
 * **FR-A-70 (SOLL):** Der CSV-Export wird in Excel und LibreOffice getestet.
+* **FR-A-90 (MUSS):** Der Admin kann die Konfiguration unter „Sicherung“ als JSON exportieren. Die Datei enthält Veranstaltungsdaten, Stände mit Farben und Icons, Gruppen, Schichten und Bedarf. Sie enthält keine Helfer-Einträge, keine Admin-Zugangsdaten und kein Audit-Log. Der Standard-Dateiname lautet `YYYY-MM-DD_Titel.json`, wobei `Titel` der Veranstaltungsname ist.
+* **FR-A-91 (MUSS):** Der Admin kann eine zuvor exportierte Konfigurationsdatei importieren. Die Datei wird vor der Übernahme validiert; Fehler werden verständlich angezeigt, und der Import erfolgt erst nach einer Bestätigung. Importiert werden ausschließlich die Konfigurationsdaten; vorhandene Helfer-Einträge bleiben erhalten, sofern sie weiterhin zu Ständen, Schichten und Bedarf passen, andernfalls werden sie entfernt. Admin-Passwort und Audit-Log bleiben unverändert.
 
 #### 5.9 Audit-Log
 
@@ -370,7 +373,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 #### 5.10 Admin-Oberfläche
 
 * **FR-A-78 (MUSS):** `admin.html` verwendet dasselbe Designsystem wie die Helfer-Ansicht (Farben, Typografie, Radien, Schatten, Fokusringe).
-* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Export, Passwort ändern, Zurücksetzen und Abmelden.
+* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Drucken & CSV, Sicherung, Passwort ändern, Zurücksetzen und Abmelden.
 * **FR-A-80 (MUSS):** Die Navigation ist auf Mobilgeräten horizontal scrollbar; auf Desktop als Tabs oder Seitenleiste.
 * **FR-A-81 (MUSS):** Formulare haben sichtbare Labels, Inline-Validierung, Speichern/Abbrechen und Toast-Feedback.
 * **FR-A-82 (MUSS):** Destruktive Aktionen öffnen einen Bestätigungsdialog mit klarer Konsequenzbeschreibung.
@@ -594,7 +597,7 @@ Hinweise:
 * **FR-D-19 (SOLL):** Der Admin-Bereich bietet eine Funktion „Daten prüfen“, die verwaiste Assignments, Bedarfseinträge ohne Stand/Schicht und ungültige Gruppenverweise findet und bereinigt.
 * **FR-D-20 (MUSS):** Ein Multi-Path-Update wird verwendet, wenn mehrere zusammengehörige Pfade atomar geändert werden müssen (z. B. Stand löschen).
 * **FR-D-21 (MUSS):** Die Datenstruktur bleibt abwärtskompatibel: Neue optionale Felder dürfen hinzukommen, bestehende Felder werden nicht umbenannt, ohne eine Migration zu dokumentieren.
-* **FR-D-22 (SOLL):** Eine Export-Funktion für die komplette Datenbank (JSON) ist im Admin-Bereich optional verfügbar.
+* **FR-D-22 (SOLL):** Der Admin-Bereich bietet einen Import und Export der Konfiguration als JSON (Veranstaltungsdaten, Stände, Schichten, Gruppen, Bedarf). Helfer-Einträge, Admin-Zugangsdaten und Audit-Log sind nicht Bestandteil des Exports.
 
 ---
 
@@ -860,6 +863,7 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * **AC-22 – Barrierefreiheit:** Given ich navigiere nur mit der Tastatur. Then sind alle Funktionen erreichbar und der Fokus ist sichtbar.
 * **AC-23 – Mobile 320 px:** Given ich öffne die Seite bei 320 px Breite. Then gibt es keinen horizontalen Überlauf außerhalb der Filterleiste; alle Inhalte sind lesbar.
 * **AC-24 – Offline:** Given ich bin offline und lasse die Seite geöffnet. When ich einen Eintrag speichere. Then erscheint das Offline-Banner, der Platz zeigt „Wird synchronisiert“ und der Eintrag wird nach Wiederverbindung ohne Reload synchronisiert.
+* **AC-25 – Konfiguration sichern:** Given ich bin im Admin-Bereich unter „Sicherung“. When ich die Konfiguration exportiere. Then heißt die JSON-Datei `YYYY-MM-DD_Titel.json` und enthält Veranstaltungsdaten, Stände, Schichten, Gruppen und Bedarf, aber keine Helfer-Einträge, Admin-Zugangsdaten oder Audit-Logs. When ich eine gültige Konfigurationsdatei importiere und bestätige. Then werden die Einstellungen übernommen, das Admin-Passwort bleibt unverändert und unpassende Helfer-Einträge werden entfernt.
 
 ---
 
