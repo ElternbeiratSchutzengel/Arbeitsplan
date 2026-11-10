@@ -168,9 +168,24 @@ export const ICON_NAMES = new Set([
   "music",
   "ticket",
   "salad",
+  "waffle",
+  "ice-cream",
+  "fries",
+  "popcorn",
+  "candy",
+  "sausage",
+  "lemonade",
+  "tea",
+  "wine",
+  "cocktail",
   "star",
   "users",
-  "heart"
+  "child",
+  "heart",
+  "balloon",
+  "gift",
+  "game",
+  "tent"
 ]);
 
 export const ICON_LABELS = {
@@ -183,9 +198,24 @@ export const ICON_LABELS = {
   music: "Note",
   ticket: "Ticket",
   salad: "Salat",
+  waffle: "Waffel",
+  "ice-cream": "Eis",
+  fries: "Pommes",
+  popcorn: "Popcorn",
+  candy: "Süßigkeiten",
+  sausage: "Wurst",
+  lemonade: "Limonade",
+  tea: "Tee",
+  wine: "Wein",
+  cocktail: "Cocktail",
   star: "Stern",
   users: "Personen",
-  heart: "Herz"
+  child: "Kinder",
+  heart: "Herz",
+  balloon: "Luftballon",
+  gift: "Geschenk",
+  game: "Spiel",
+  tent: "Zelt"
 };
 
 export const COLOR_LABELS = Object.fromEntries(

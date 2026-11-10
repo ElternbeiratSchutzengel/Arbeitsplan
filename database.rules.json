@@ -78,7 +78,7 @@
           ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
         },
         "icon": {
-          ".validate": "newData.isString() && newData.val().matches(/^(flame|beer|cash|cake|droplet|coffee|music|ticket|salad|star|users|heart)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(flame|beer|cash|cake|droplet|coffee|music|ticket|salad|waffle|ice-cream|fries|popcorn|candy|sausage|lemonade|tea|wine|cocktail|star|users|child|heart|balloon|gift|game|tent)$/)"
         },
         "color": {
           ".validate": "newData.isString() && newData.val().matches(/^(sky|teal|indigo|rose|amber|violet|emerald|slate)$/)"

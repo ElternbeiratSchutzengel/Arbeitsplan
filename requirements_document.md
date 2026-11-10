@@ -293,7 +293,7 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 
 * **FR-A-20 (MUSS):** Der Admin sieht alle Stände als Liste mit Name, Icon, Farbe, Gruppe und Reihenfolge.
 * **FR-A-21 (MUSS):** Anlegen und Bearbeiten: Name (2–60 Zeichen, eindeutig, case-insensitiv), Icon, Farbe, optionale Gruppe, Reihenfolge.
-* **FR-A-22 (MUSS):** Icon-Auswahl aus einem festen Satz: `flame`, `beer`, `cash`, `cake`, `droplet`, `coffee`, `music`, `ticket`, `salad`, `star`, `users`, `heart`.
+* **FR-A-22 (MUSS):** Icon-Auswahl aus einem festen Satz: `flame`, `beer`, `cash`, `cake`, `droplet`, `coffee`, `music`, `ticket`, `salad`, `waffle`, `ice-cream`, `fries`, `popcorn`, `candy`, `sausage`, `lemonade`, `tea`, `wine`, `cocktail`, `star`, `users`, `child`, `heart`, `balloon`, `gift`, `game`, `tent`.
 * **FR-A-23 (MUSS):** Farbauswahl aus einem festen Satz: `sky`, `teal`, `indigo`, `rose`, `amber`, `violet`, `emerald`, `slate`.
 * **FR-A-24 (MUSS):** Gruppe ist optional; Standard ist „Ohne Gruppe“.
 * **FR-A-25 (MUSS):** Die Reihenfolge wird über Hoch-/Runter-Buttons geändert und als `order` gespeichert; der Tausch zweier Positionen erfolgt atomar per Multi-Path-Update. Drag-and-drop ist optional.
