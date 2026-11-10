@@ -724,7 +724,6 @@ async function handleSetupSubmit(event) {
     startAdminSession();
     await writeAudit({ action: "update", entity: "config", entityId: "adminHash" });
     markWriteSuccess();
-    showToast("Admin-Passwort gespeichert. Willkommen!", "success");
     enterAdmin();
   } catch (error) {
     reportWriteError(
@@ -776,7 +775,6 @@ async function handleLoginSubmit(event) {
     }
 
     startAdminSession();
-    showToast("Willkommen im Admin-Bereich.", "success");
     enterAdmin();
   } catch (error) {
     console.error("Anmeldung fehlgeschlagen.", error);
@@ -842,7 +840,6 @@ async function handlePasswordSubmit(event) {
     if (currentInput) currentInput.value = "";
     if (newInput) newInput.value = "";
     if (repeatInput) repeatInput.value = "";
-    showToast("Passwort geändert. Die aktuelle Sitzung bleibt bestehen.", "success");
   } catch (error) {
     reportWriteError(error, "Das Passwort konnte nicht geändert werden. Bitte versuchen Sie es erneut.");
   } finally {
@@ -983,7 +980,6 @@ async function handleEventSubmit(event) {
     updateEventDirtyBadge();
     updateEventPreview();
     markWriteSuccess();
-    showToast("Veranstaltungsdaten gespeichert.", "success");
   } catch (error) {
     reportWriteError(error, "Die Veranstaltungsdaten konnten nicht gespeichert werden.");
   } finally {
@@ -1188,7 +1184,6 @@ async function handleStandSubmit(event) {
     });
     markWriteSuccess();
     closeStandEditor();
-    showToast(editedId ? "Stand aktualisiert." : "Stand angelegt.", "success");
   } catch (error) {
     reportWriteError(error, "Der Stand konnte nicht gespeichert werden.");
     setFieldError(null, formError, "Der Stand konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.");
@@ -1339,7 +1334,6 @@ async function deleteStand(id) {
         await Promise.all(operations);
         markWriteSuccess();
         if (state.editingStand === id) closeStandEditor();
-        showToast("Stand und zugehörige Einträge gelöscht.", "success");
       } catch (error) {
         reportWriteError(error, "Der Stand konnte nicht vollständig gelöscht werden.");
         throw new Error(
@@ -1461,7 +1455,6 @@ async function handleShiftSubmit(event) {
     });
     markWriteSuccess();
     closeShiftEditor();
-    showToast(editedId ? "Schicht aktualisiert." : "Schicht angelegt.", "success");
   } catch (error) {
     reportWriteError(error, "Die Schicht konnte nicht gespeichert werden.");
     setFieldError(null, $("shift-form-error"), "Die Schicht konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.");
@@ -1591,7 +1584,6 @@ async function deleteShift(id) {
         ]);
         markWriteSuccess();
         if (state.editingShift === id) closeShiftEditor();
-        showToast("Schicht und zugehörige Einträge gelöscht.", "success");
       } catch (error) {
         reportWriteError(error, "Die Schicht konnte nicht vollständig gelöscht werden.");
         throw new Error(
@@ -1695,7 +1687,6 @@ async function handleGroupSubmit(event) {
     });
     markWriteSuccess();
     closeGroupEditor();
-    showToast(editedId ? "Gruppe aktualisiert." : "Gruppe angelegt.", "success");
   } catch (error) {
     reportWriteError(error, "Die Gruppe konnte nicht gespeichert werden.");
     setFieldError(null, $("group-form-error"), "Die Gruppe konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.");
@@ -1826,7 +1817,6 @@ async function deleteGroup(id) {
         await Promise.all(operations);
         markWriteSuccess();
         if (state.editingGroup === id) closeGroupEditor();
-        showToast("Gruppe gelöscht. Zugeordnete Stände sind jetzt ohne Gruppe.", "success");
       } catch (error) {
         reportWriteError(error, "Die Gruppe konnte nicht vollständig gelöscht werden.");
         throw new Error(
@@ -2271,12 +2261,6 @@ async function handleDemandSave() {
     syncDemandDraft();
     renderDemand();
     markWriteSuccess();
-    showToast(
-      removedAssignments > 0
-        ? `Bedarf gespeichert. ${removedAssignments} ${removedAssignments === 1 ? "überzähliger Eintrag wurde" : "überzählige Einträge wurden"} gelöscht.`
-        : "Bedarf gespeichert.",
-      "success"
-    );
   } catch (error) {
     reportWriteError(error, "Der Bedarf konnte nicht vollständig gespeichert werden.");
   } finally {
@@ -2448,10 +2432,7 @@ function describeIntegrityPath(path, type) {
 
 async function runIntegrityCheck() {
   const issues = collectIntegrityIssues();
-  if (issues.total === 0) {
-    showToast("Keine Auffälligkeiten gefunden. Die Daten sind konsistent.", "success");
-    return;
-  }
+  if (issues.total === 0) return;
 
   const lines = [];
   const addLines = (paths, type) => {
@@ -2518,7 +2499,6 @@ async function runIntegrityCheck() {
 
         await Promise.all(operations);
         markWriteSuccess();
-        showToast("Datenprüfung abgeschlossen. Ungültige Einträge wurden bereinigt.", "success");
       } catch (error) {
         reportWriteError(error, "Die Daten konnten nicht vollständig bereinigt werden.");
         throw new Error(
@@ -2683,7 +2663,6 @@ function exportConfiguration() {
     configExportFileName(),
     "application/json;charset=utf-8"
   );
-  showToast("Konfiguration exportiert. Die Datei enthält keine Helfer-Einträge und kein Admin-Passwort.", "success");
 }
 
 /* --------------------------------------------------------------------------
@@ -3314,7 +3293,6 @@ async function handleConfigImport() {
         markWriteSuccess();
         clearConfigImportSelection();
         renderAll();
-        showToast("Konfiguration importiert.", "success");
       } catch (error) {
         state.configImportBusy = false;
         renderConfigImportState();
@@ -3468,7 +3446,6 @@ async function resetEntries() {
 
         resetLocalAfterEntries();
         markWriteSuccess();
-        showToast("Alle Helfer-Einträge wurden zurückgesetzt.", "success");
       } catch (error) {
         reportWriteError(error, "Die Einträge konnten nicht vollständig zurückgesetzt werden.");
         throw new Error(
@@ -3520,7 +3497,6 @@ async function resetConfiguration() {
         state.demandShowErrors = false;
         markWriteSuccess();
         renderAll();
-        showToast("Konfiguration zurückgesetzt. Veranstaltungsdaten und Passwort bleiben erhalten.", "success");
       } catch (error) {
         reportWriteError(error, "Die Konfiguration konnte nicht vollständig zurückgesetzt werden.");
         throw new Error(
@@ -3583,8 +3559,6 @@ async function resetEverything() {
           "Einige Daten konnten nicht gelöscht werden. Bitte versuchen Sie es erneut.",
           "error"
         );
-      } else {
-        showToast("Alle Daten wurden gelöscht. Bitte richten Sie den Admin-Zugang neu ein.", "success");
       }
     }
   });

@@ -1220,20 +1220,6 @@ svg {
   font-size: 13px;
 }
 
-.success-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--emerald-100);
-  border-radius: var(--radius-control);
-  background: var(--emerald-50);
-  color: var(--emerald-700);
-  font-size: 13px;
-  font-weight: 600;
-}
-
 .skeleton-card {
   overflow: hidden;
   border: 1px solid var(--slate-200);
@@ -1982,10 +1968,6 @@ svg {
 .toast .icon {
   margin-top: 1px;
   flex: none;
-}
-
-.toast--success {
-  background: #065f46;
 }
 
 .toast--error {

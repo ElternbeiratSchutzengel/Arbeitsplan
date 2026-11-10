@@ -443,9 +443,6 @@ function renderHeader() {
       fill.style.width = `${Math.round((stats.filled / stats.total) * 100)}%`;
     }
   }
-
-  const fullBanner = qs("#full-banner");
-  if (fullBanner) fullBanner.hidden = !(stats.total > 0 && stats.missing === 0);
 }
 
 function renderFilters() {
@@ -1244,10 +1241,6 @@ async function submitEventForm(event) {
     setEventFormDisabled(false);
     closeModal("event-dialog", { restoreFocus: false });
     scheduleRender();
-    showToast(
-      "Veranstaltung erstellt. Jetzt können Stände und Schichten eingerichtet werden.",
-      "success"
-    );
 
     window.requestAnimationFrame(() => {
       qs("#hero-title")?.focus();
@@ -1488,14 +1481,6 @@ function finishSlotOperation(operation, outcome, { dialog = null } = {}) {
     }
     state.focusSlotKey = key;
     scheduleRender();
-    showToast(
-      operation.kind === "delete"
-        ? "Eintrag gelöscht."
-        : operation.action === "create"
-          ? "Eingetragen. Danke für deine Hilfe!"
-          : "Gespeichert.",
-      "success"
-    );
     return;
   }
 

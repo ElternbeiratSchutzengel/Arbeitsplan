@@ -337,12 +337,11 @@ export function clearAdminSession() {
    -------------------------------------------------------------------------- */
 
 const TOAST_ICONS = {
-  success: "check",
   error: "alert",
   info: "info"
 };
 
-export function showToast(message, type = "success", { duration = 4500 } = {}) {
+export function showToast(message, type = "info", { duration = 4500 } = {}) {
   const region = document.getElementById("toast-region");
   if (!region) return;
 
