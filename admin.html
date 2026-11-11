@@ -126,7 +126,7 @@
         </div>
         <div class="alert alert-error" id="login-error" role="alert" hidden></div>
         <button type="submit" class="btn btn-primary btn-block" id="login-submit">Anmelden</button>
-        <button type="button" class="link-btn" id="forgot-link">Passwort vergessen?</button>
+        <a class="link-btn" id="readme-link" href="https://github.com/PauerDieMauer/Arbeitsplan/blob/main/README.md" target="_blank" rel="noopener">Hilfe &amp; Anleitung (README)</a>
       </form>
 
       <a href="index.html" class="auth-back">
@@ -756,34 +756,6 @@
         <div class="modal-actions-right">
           <button type="button" class="btn btn-secondary" id="confirm-cancel">Abbrechen</button>
           <button type="button" class="btn btn-primary" id="confirm-submit">Bestätigen</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recovery-Hinweis -->
-  <div class="modal-layer" id="recovery-dialog" hidden>
-    <div class="modal-backdrop" data-close="recovery-dialog"></div>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="recovery-title">
-      <div class="modal-head">
-        <h2 id="recovery-title">Passwort vergessen?</h2>
-        <button type="button" class="icon-btn" data-close="recovery-dialog" aria-label="Dialog schließen">
-          <svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>
-        </button>
-      </div>
-      <div class="prose">
-        <p>Der Admin-Zugang ist ein UI-Schutz ohne Server-Authentifizierung. Eine automatische Passwort-Zurücksetzung per E-Mail gibt es nicht. So setzen Sie das Passwort zurück:</p>
-        <ol>
-          <li>Öffnen Sie die Verwaltungsoberfläche.</li>
-          <li>Löschen Sie unter <code>config</code> die Felder <code>adminHash</code> und <code>adminSalt</code>.</li>
-          <li>Laden Sie diese Seite neu. Es erscheint wieder die Erstvergabe.</li>
-          <li>Vergeben Sie ein neues, starkes Passwort.</li>
-        </ol>
-        <p class="hint">Diese Anleitung steht auch im README. Der Zugriff auf die Verwaltungsoberfläche ist dabei die eigentliche Sicherheitsgrenze.</p>
-      </div>
-      <div class="modal-actions">
-        <div class="modal-actions-right">
-          <button type="button" class="btn btn-primary" data-close="recovery-dialog">Verstanden</button>
         </div>
       </div>
     </div>

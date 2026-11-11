@@ -46,7 +46,6 @@ import {
   clearAdminSession,
   showToast,
   setupModal,
-  openModal,
   confirmAction,
   initConfirmDialog,
   setButtonBusy,
@@ -3612,12 +3611,6 @@ function bindEvents() {
   $("event-form")?.addEventListener("submit", handleEventSubmit, { signal });
   $("event-cancel")?.addEventListener("click", () => populateEventForm(true), { signal });
 
-  $("forgot-link")?.addEventListener(
-    "click",
-    () => openModal("recovery-dialog", { opener: $("forgot-link") }),
-    { signal }
-  );
-
   for (const [id] of EVENT_FIELDS) {
     const input = $(id);
     input?.addEventListener(
@@ -3784,7 +3777,6 @@ function bindEvents() {
 
 function initAdmin() {
   initConfirmDialog();
-  setupModal("recovery-dialog");
   bindEvents();
   startSessionWatchers();
 
