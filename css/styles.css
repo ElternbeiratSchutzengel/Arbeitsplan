@@ -3063,6 +3063,12 @@ svg {
   text-align: left;
 }
 
+.print-slots--unused {
+  background: #e8e8e8;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 .print-slot {
   line-height: 1.3;
   hyphens: manual;

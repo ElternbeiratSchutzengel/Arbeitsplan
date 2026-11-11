@@ -3372,6 +3372,7 @@ function preparePrintView() {
         const cell = createEl("td", "print-slots");
 
         if (demand <= 0) {
+          cell.classList.add("print-slots--unused");
           cell.append(createEl("span", "print-no-demand", "–"));
         } else {
           for (let slotIndex = 0; slotIndex < demand; slotIndex += 1) {
