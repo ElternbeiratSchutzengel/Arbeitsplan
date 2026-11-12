@@ -110,13 +110,23 @@ export function timeToMinutes(value) {
 }
 
 export function validateShiftTimes(start, end) {
-  if (!isValidTime(start)) {
+  const startValue = String(start ?? "").trim();
+  const endValue = String(end ?? "").trim();
+
+  if (!startValue && !endValue) return { valid: true, error: "" };
+  if (!startValue) {
+    return { valid: false, error: "Bitte gib eine Startzeit an oder lasse beide Zeiten leer." };
+  }
+  if (!endValue) {
+    return { valid: false, error: "Bitte gib eine Endzeit an oder lasse beide Zeiten leer." };
+  }
+  if (!isValidTime(startValue)) {
     return { valid: false, error: "Bitte gib eine gültige Startzeit im Format HH:MM an." };
   }
-  if (!isValidTime(end)) {
+  if (!isValidTime(endValue)) {
     return { valid: false, error: "Bitte gib eine gültige Endzeit im Format HH:MM an." };
   }
-  if (timeToMinutes(end) <= timeToMinutes(start)) {
+  if (timeToMinutes(endValue) <= timeToMinutes(startValue)) {
     return { valid: false, error: "Die Endzeit muss nach der Startzeit liegen." };
   }
   return { valid: true, error: "" };

@@ -57,6 +57,7 @@ import {
   validateText,
   validateEventDate,
   validateShiftTimes,
+  isValidTime,
   shiftsOverlap,
   validatePasswordPair,
   validateDemand,
@@ -1408,16 +1409,21 @@ async function handleShiftSubmit(event) {
   const startInput = $("shift-start");
   const endInput = $("shift-end");
   const name = validateText(nameInput?.value, { min: 2, max: 60, label: "Name" });
-  const times = validateShiftTimes(startInput?.value, endInput?.value);
+  const startValue = String(startInput?.value ?? "").trim();
+  const endValue = String(endInput?.value ?? "").trim();
+  const hasTimes = Boolean(startValue || endValue);
+  const times = hasTimes ? validateShiftTimes(startValue, endValue) : { valid: true, error: "" };
 
   let startError = "";
   let endError = "";
   if (!times.valid) {
-    if (!startInput?.value) startError = "Bitte geben Sie eine Startzeit an.";
-    else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startInput.value)) {
+    if (!startValue) startError = "Bitte geben Sie auch eine Startzeit an.";
+    else if (!isValidTime(startValue)) {
       startError = "Bitte geben Sie eine gültige Startzeit im Format HH:MM an.";
-    } else if (!endInput?.value) endError = "Bitte geben Sie eine Endzeit an.";
-    else endError = times.error;
+    } else if (!endValue) endError = "Bitte geben Sie auch eine Endzeit an.";
+    else if (!isValidTime(endValue)) {
+      endError = "Bitte geben Sie eine gültige Endzeit im Format HH:MM an.";
+    } else endError = times.error;
   }
 
   setFieldError(nameInput, $("shift-name-error"), name.valid ? "" : name.error);
@@ -1435,8 +1441,8 @@ async function handleShiftSubmit(event) {
   const id = editedId || push(ref(db, "shifts")).key;
   const value = {
     name: name.value,
-    start: startInput.value,
-    end: endInput.value,
+    start: startValue,
+    end: endValue,
     order: existing ? numberOr(existing.order, 0) : nextOrder(state.shifts)
   };
 
@@ -1486,9 +1492,8 @@ function renderShifts() {
     main.append(createEl("p", "admin-list-name", String(shift?.name ?? "Schicht")));
 
     const meta = createEl("div", "admin-list-meta");
-    meta.append(
-      createEl("span", "", formatTimeRange(shift?.start, shift?.end) || "Keine Zeit angegeben")
-    );
+    const timeLabel = formatTimeRange(shift?.start, shift?.end);
+    if (timeLabel) meta.append(createEl("span", "", timeLabel));
     meta.append(createEl("span", "", `Reihenfolge ${index + 1}`));
     main.append(meta);
 
@@ -1959,9 +1964,8 @@ function renderDemand() {
     const cell = createEl("th");
     cell.scope = "col";
     cell.append(document.createTextNode(String(shift?.name ?? "Schicht")));
-    cell.append(
-      createEl("span", "", formatTimeRange(shift?.start, shift?.end) || "Keine Zeit")
-    );
+    const timeLabel = formatTimeRange(shift?.start, shift?.end);
+    if (timeLabel) cell.append(createEl("span", "", timeLabel));
     headRow.append(cell);
   }
   thead.append(headRow);
@@ -2001,9 +2005,8 @@ function renderDemand() {
   for (const [shiftId, shift] of shifts) {
     const card = createEl("div", "demand-card");
     card.append(createEl("h3", "", String(shift?.name ?? "Schicht")));
-    card.append(
-      createEl("p", "", formatTimeRange(shift?.start, shift?.end) || "Keine Zeit angegeben")
-    );
+    const timeLabel = formatTimeRange(shift?.start, shift?.end);
+    if (timeLabel) card.append(createEl("p", "", timeLabel));
 
     for (const [standId, stand] of stands) {
       const row = createEl("label", "demand-row");
@@ -3334,9 +3337,8 @@ function preparePrintView() {
     const cell = createEl("th", "print-shift");
     cell.scope = "col";
     cell.append(createEl("span", "print-shift-name", String(shift?.name ?? "Schicht")));
-    cell.append(
-      createEl("span", "print-shift-time", formatTimeRange(shift?.start, shift?.end) || "Keine Zeit")
-    );
+    const timeLabel = formatTimeRange(shift?.start, shift?.end);
+    if (timeLabel) cell.append(createEl("span", "print-shift-time", timeLabel));
     headRow.append(cell);
   }
   thead.append(headRow);

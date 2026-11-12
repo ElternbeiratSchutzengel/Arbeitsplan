@@ -799,8 +799,9 @@ function buildShiftCard(shiftId, shift, stands) {
   const titleWrap = createEl("div", "shift-title-wrap");
   const title = createEl("h3", "shift-name", shift.name || "Schicht");
   title.id = `shift-title-${shiftId}`;
-  const time = createEl("p", "shift-time", formatTimeRange(shift.start, shift.end));
-  titleWrap.append(title, time);
+  titleWrap.append(title);
+  const timeLabel = formatTimeRange(shift.start, shift.end);
+  if (timeLabel) titleWrap.append(createEl("p", "shift-time", timeLabel));
   headLeft.append(shiftIcon, titleWrap);
 
   const badges = createEl("div", "shift-badges");
@@ -1294,8 +1295,14 @@ function openSlotDialog(shiftId, standId, slotIndex, opener) {
   state.slotDialog = dialog;
 
   qs("#slot-dialog-title").textContent = assignment ? "Eintrag bearbeiten" : "Platz eintragen";
-  qs("#slot-dialog-context").textContent =
-    `${shift.name} · ${formatTimeRange(shift.start, shift.end)} · ${stand.name} · Platz ${slotIndex + 1} von ${demand}`;
+  qs("#slot-dialog-context").textContent = [
+    shift.name,
+    formatTimeRange(shift.start, shift.end),
+    stand.name,
+    `Platz ${slotIndex + 1} von ${demand}`
+  ]
+    .filter(Boolean)
+    .join(" · ");
   qs("#slot-name-label").textContent = assignment ? "Name" : "Dein Name";
   qs("#slot-name-hint").textContent = assignment
     ? "2–60 Zeichen. Dein Name wird öffentlich angezeigt."

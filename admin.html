@@ -424,7 +424,7 @@
           <div class="admin-page-head">
             <div>
               <h1 class="admin-page-title">Schichten</h1>
-              <p class="admin-page-subtitle">Zeitfenster, in denen die Stände besetzt werden.</p>
+              <p class="admin-page-subtitle">Zeitfenster (optional), in denen die Stände besetzt werden.</p>
             </div>
             <button type="button" class="btn btn-primary" id="shift-add">
               <svg class="icon icon-sm" aria-hidden="true"><use href="#i-plus"/></svg>Neue Schicht
@@ -433,7 +433,7 @@
 
           <form id="shift-form" class="panel editor-panel" novalidate hidden>
             <div class="panel-head">
-              <div><h2 id="shift-form-title">Neue Schicht</h2><p>Name sowie Start- und Endzeit festlegen.</p></div>
+              <div><h2 id="shift-form-title">Neue Schicht</h2><p>Name sowie optional Start- und Endzeit festlegen.</p></div>
               <button type="button" class="icon-btn" id="shift-form-close" aria-label="Editor schließen">
                 <svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>
               </button>
@@ -445,16 +445,17 @@
                 <p class="field-error" id="shift-name-error" role="alert"></p>
               </div>
               <div class="field">
-                <label for="shift-start">Startzeit</label>
-                <input type="time" id="shift-start" aria-describedby="shift-start-error">
+                <label for="shift-start">Startzeit (optional)</label>
+                <input type="time" id="shift-start" aria-describedby="shift-start-error shift-times-hint">
                 <p class="field-error" id="shift-start-error" role="alert"></p>
               </div>
               <div class="field">
-                <label for="shift-end">Endzeit</label>
-                <input type="time" id="shift-end" aria-describedby="shift-end-error">
+                <label for="shift-end">Endzeit (optional)</label>
+                <input type="time" id="shift-end" aria-describedby="shift-end-error shift-times-hint">
                 <p class="field-error" id="shift-end-error" role="alert"></p>
               </div>
             </div>
+            <p class="hint" id="shift-times-hint">Beide Zeitfelder leer lassen, wenn die Schicht ohne Uhrzeit angezeigt werden soll.</p>
             <div class="alert alert-warning" id="shift-overlap-warning" role="status" hidden>
               <svg class="icon icon-sm" aria-hidden="true"><use href="#i-alert"/></svg>
               <span>Diese Schicht überschneidet sich mit einer anderen Schicht. Das Speichern ist trotzdem möglich.</span>

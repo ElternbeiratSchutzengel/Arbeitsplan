@@ -56,10 +56,10 @@
           ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
         },
         "start": {
-          ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+          ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/))"
         },
         "end": {
-          ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+          ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/))"
         },
         "order": {
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"

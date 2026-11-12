@@ -257,7 +257,7 @@ aktive Veranstaltung pro Deployment.
 |---|---|
 | `config` | `clubName`, `eventName`, `eventDate`, `eventLocation`, `tagline`, `adminSalt`, `adminHash` |
 | `groups/{groupId}` | `name`, `color`, `order` |
-| `shifts/{shiftId}` | `name`, `start`, `end`, `order` |
+| `shifts/{shiftId}` | `name`, `start`, `end`, `order` (`start` und `end` optional) |
 | `stands/{standId}` | `name`, `icon`, `color`, `groupId`, `order` |
 | `demand/{shiftId}/{standId}` | Bedarf als Ganzzahl 0–20 |
 | `assignments/{shiftId}/{standId}/{slotIndex}` | `name`, `createdAt`, `updatedAt` |

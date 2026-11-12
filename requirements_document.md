@@ -35,7 +35,7 @@
 | Begriff | Bedeutung |
 |---|---|
 | Stand | Arbeitsbereich auf dem Fest, z. B. Grill, Ausschank oder Kasse |
-| Schicht | Zeitfenster, in dem Stände besetzt werden, z. B. 11:00–14:00 Uhr |
+| Schicht | Zeitfenster, in dem Stände besetzt werden, z. B. 11:00–14:00 Uhr; die Zeitangabe ist optional |
 | Platz | Ein einzelner Helfer-Slot innerhalb eines Standes und einer Schicht |
 | Bedarf | Anzahl benötigter Helfer pro Stand und Schicht |
 | Belegung | Anzahl bereits eingetragener Helfer |
@@ -186,7 +186,7 @@ Die Helfer-Ansicht ist die öffentliche Startseite `index.html`. Sie ist nach De
 #### 4.3 Schichtkarten
 
 * **FR-H-22 (MUSS):** Jede Schicht wird als eigene Karte dargestellt. Die Reihenfolge folgt dem `order`-Feld, bei Gleichstand der Startzeit.
-* **FR-H-23 (MUSS):** Der Kartenkopf zeigt den Schichtnamen, die Zeit im Format `HH:MM – HH:MM Uhr`, die Anzahl freier Plätze und die Belegung `belegt/gesamt`.
+* **FR-H-23 (MUSS):** Der Kartenkopf zeigt den Schichtnamen, die Anzahl freier Plätze und die Belegung `belegt/gesamt`. Ist eine Zeit hinterlegt, wird sie zusätzlich im Format `HH:MM – HH:MM Uhr` angezeigt; ohne Zeitangabe entfällt die Zeitzeile.
 * **FR-H-24 (MUSS):** Die Anzahl freier Plätze einer Schicht ist die Summe der freien Plätze aller in dieser Schicht aktiven Stände.
 * **FR-H-25 (MUSS):** Ist mindestens ein Platz frei, zeigt der Kopf ein grünes Badge „x frei“. Ist die Schicht vollständig belegt, zeigt er „Vollzählig“ mit Check-Icon.
 * **FR-H-26 (MUSS):** Das Badge `belegt/gesamt` wird ab der Breakpoint `sm` (640 px) zusätzlich angezeigt; auf kleinen Bildschirmen genügt das Frei-Badge.
@@ -304,13 +304,13 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 
 #### 5.4 Schichten
 
-* **FR-A-30 (MUSS):** Der Admin sieht alle Schichten als Liste mit Name, Startzeit, Endzeit und Reihenfolge.
-* **FR-A-31 (MUSS):** Anlegen und Bearbeiten: Name (2–60 Zeichen), Startzeit (`HH:MM`), Endzeit (`HH:MM`), Reihenfolge.
-* **FR-A-32 (MUSS):** Die Endzeit muss nach der Startzeit liegen. Übernacht-Schichten sind in Version 1 nicht vorgesehen.
+* **FR-A-30 (MUSS):** Der Admin sieht alle Schichten als Liste mit Name, Reihenfolge und – falls hinterlegt – Start- und Endzeit.
+* **FR-A-31 (MUSS):** Anlegen und Bearbeiten: Name (2–60 Zeichen), Reihenfolge sowie optional Startzeit (`HH:MM`) und Endzeit (`HH:MM`).
+* **FR-A-32 (MUSS):** Start- und Endzeit sind entweder beide leer oder beide gesetzt. Wenn sie gesetzt sind, muss die Endzeit nach der Startzeit liegen. Übernacht-Schichten sind in Version 1 nicht vorgesehen.
 * **FR-A-33 (MUSS):** Die Reihenfolge wird über Hoch-/Runter-Buttons geändert und als `order` gespeichert.
 * **FR-A-34 (MUSS):** Löschen einer Schicht verlangt eine Bestätigung und entfernt die Schicht, ihren Bedarf und alle zugehörigen Assignments. Ein Audit-Log-Eintrag wird geschrieben.
 * **FR-A-35 (SOLL):** Überlappende Schichten erzeugen eine Warnung, blockieren das Speichern aber nicht.
-* **FR-A-36 (MUSS):** Neue Schichten starten mit leeren Pflichtfeldern und einer verständlichen Validierung.
+* **FR-A-36 (MUSS):** Neue Schichten starten mit leeren Feldern; nur der Name ist Pflicht, die Zeitfelder sind optional. Die Validierung ist verständlich.
 
 #### 5.5 Gruppen
 
