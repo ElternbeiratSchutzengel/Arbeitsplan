@@ -98,11 +98,6 @@
         <span>Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.</span>
       </div>
 
-      <div class="alert alert-info alert-security" id="auth-security">
-        <svg class="icon icon-sm" aria-hidden="true"><use href="#i-shield"/></svg>
-        <span>Der Admin-Zugang ist ein UI-Schutz, keine Server-Authentifizierung. Bitte verwenden Sie ein starkes, einzigartiges Passwort.</span>
-      </div>
-
       <form id="setup-form" class="auth-form" novalidate hidden>
         <div class="field">
           <label for="setup-password">Passwort festlegen</label>
@@ -126,7 +121,11 @@
         </div>
         <div class="alert alert-error" id="login-error" role="alert" hidden></div>
         <button type="submit" class="btn btn-primary btn-block" id="login-submit">Anmelden</button>
-        <a class="link-btn" id="readme-link" href="https://github.com/PauerDieMauer/Arbeitsplan/blob/main/README.md" target="_blank" rel="noopener">Hilfe &amp; Anleitung (README)</a>
+        <button type="button" class="link-btn" id="forgot-password" aria-expanded="false" aria-controls="forgot-password-info">Passwort vergessen</button>
+        <div class="alert alert-info" id="forgot-password-info" role="status" hidden>
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#i-info"/></svg>
+          <span>Bitte wenden Sie sich an <strong>Christian Rudmann</strong>, um das Passwort zurücksetzen zu lassen: <a href="mailto:christian.rudmann@mail.de">christian.rudmann@mail.de</a></span>
+        </div>
       </form>
 
       <a href="index.html" class="auth-back">
@@ -134,8 +133,6 @@
         Zur Helfer-Ansicht
       </a>
     </div>
-
-    <p class="auth-footnote">Der Passwort-Hash ist öffentlich lesbar. Verwenden Sie ein starkes, einzigartiges Passwort und teilen Sie den Admin-Zugang nicht weiter.</p>
   </section>
 
   <!-- Angemeldeter Admin-Bereich -->
@@ -666,10 +663,6 @@
           </div>
 
           <form id="password-form" class="panel panel--narrow" novalidate>
-            <div class="alert alert-warning">
-              <svg class="icon icon-sm" aria-hidden="true"><use href="#i-shield"/></svg>
-              <span>Der Passwort-Hash ist öffentlich lesbar. Verwenden Sie ein starkes, einzigartiges Passwort.</span>
-            </div>
             <div class="field">
               <label for="password-current">Aktuelles Passwort</label>
               <input type="password" id="password-current" autocomplete="current-password" maxlength="128" aria-describedby="password-current-error">

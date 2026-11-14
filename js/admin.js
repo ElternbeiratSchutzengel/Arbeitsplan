@@ -388,6 +388,12 @@ function updateAdminLabels() {
     : "Admin-Bereich – Helferplan";
 }
 
+function setForgotPasswordOpen(open) {
+  const button = $("forgot-password");
+  if (button) button.setAttribute("aria-expanded", open ? "true" : "false");
+  setHidden($("forgot-password-info"), !open);
+}
+
 function showAuth(mode, { expired = false } = {}) {
   state.authMode = mode;
   state.authExpired = expired;
@@ -423,6 +429,7 @@ function showAuth(mode, { expired = false } = {}) {
     setHidden(loginForm, false);
     setHidden(setupForm, true);
     setHidden(sessionMessage, !expired);
+    setForgotPasswordOpen(false);
     const password = $("login-password");
     if (password) password.value = "";
     setFieldError($("login-password"), $("login-password-error"), "");
@@ -3609,6 +3616,14 @@ function bindEvents() {
 
   $("setup-form")?.addEventListener("submit", handleSetupSubmit, { signal });
   $("login-form")?.addEventListener("submit", handleLoginSubmit, { signal });
+  $("forgot-password")?.addEventListener(
+    "click",
+    () => {
+      const isOpen = $("forgot-password")?.getAttribute("aria-expanded") === "true";
+      setForgotPasswordOpen(!isOpen);
+    },
+    { signal }
+  );
   $("password-form")?.addEventListener("submit", handlePasswordSubmit, { signal });
   $("event-form")?.addEventListener("submit", handleEventSubmit, { signal });
   $("event-cancel")?.addEventListener("click", () => populateEventForm(true), { signal });
