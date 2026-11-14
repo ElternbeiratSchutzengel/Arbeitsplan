@@ -1726,10 +1726,6 @@ svg {
   color: var(--rose-700);
 }
 
-.alert-security {
-  font-size: 11px;
-}
-
 .prose {
   color: var(--slate-600);
   font-size: 14px;
@@ -2102,6 +2098,16 @@ svg {
   margin-top: 6px;
 }
 
+#forgot-password-info {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+#forgot-password-info a {
+  color: inherit;
+  font-weight: 600;
+}
+
 .auth-back {
   display: inline-flex;
   align-items: center;
@@ -2116,15 +2122,6 @@ svg {
 
 .auth-back:hover {
   color: var(--navy-800);
-}
-
-.auth-footnote {
-  max-width: 460px;
-  margin: 14px 0 0;
-  color: rgba(226, 232, 240, 0.72);
-  font-size: 11px;
-  line-height: 1.55;
-  text-align: center;
 }
 
 /* --------------------------------------------------------------------------

@@ -354,8 +354,6 @@ function render() {
   updateAdminLinkLabel();
 
   if (!eventExists) {
-    const badge = qs("#brand-club");
-    if (badge) badge.textContent = "Neue Veranstaltung";
     const footer = qs("#footer-club");
     if (footer) footer.textContent = "Helferplan";
     return;
@@ -393,7 +391,6 @@ function renderHeader() {
   const dateLabel = formatEventDate(config.eventDate);
   const locationLabel = String(config.eventLocation ?? "").trim();
 
-  qs("#brand-club").textContent = clubName;
   qs("#hero-eyebrow").textContent = `${eventName} · ${clubName}`;
   qs("#hero-title").textContent = tagline || eventName;
   qs("#hero-date").textContent = dateLabel || "Datum folgt";

@@ -231,16 +231,50 @@ Authentifizierung.
 
 ### Passwort vergessen
 
-Es gibt keinen E-Mail-Reset. Der Zugang wird direkt in der Firebase Console
-zurückgesetzt:
+Es gibt keinen automatischen E-Mail-Reset. Im Login-Fenster von `admin.html`
+öffnet **Passwort vergessen** einen Hinweis. Bitte wenden Sie sich an
+**Christian Rudmann** unter
+[christian.rudmann@mail.de](mailto:christian.rudmann@mail.de), um den Zugang
+zurücksetzen zu lassen.
+
+#### Notfall-Reset durch den Datenbank-Administrator
+
+Für einen Reset über die Firebase Console gibt es ein Standard-Passwort. Es ist
+bewusst öffentlich und muss nach dem ersten Login sofort geändert werden.
+
+Standard-Passwort: `admin123`
+
+Der Hash wird als `SHA-256(adminSalt + Passwort)` berechnet. Deshalb gehören
+zum Zurücksetzen **beide** Werte – `adminSalt` und `adminHash`:
+
+| Feld | Wert |
+|---|---|
+| `adminSalt` | `a1b2c3d4e5f60718293a4b5c6d7e8f90` |
+| `adminHash` | `0212b518b03b50cc62a0dadc9e897f48190e21e0af3ba93665b4b0085885e265` |
+
+Zum Kopieren als JSON:
+
+```json
+{
+  "adminSalt": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "adminHash": "0212b518b03b50cc62a0dadc9e897f48190e21e0af3ba93665b4b0085885e265"
+}
+```
+
+Vorgehen:
 
 1. **Realtime Database → Daten** öffnen.
-2. Die Knoten `config/adminSalt` und `config/adminHash` löschen.
-3. `admin.html` neu laden.
-4. Die Erstvergabe erscheint; ein neues Passwort setzen.
+2. Unter `config` die Werte `adminSalt` und `adminHash` durch die obigen Werte
+   ersetzen (beide Felder, nicht nur den Hash).
+3. `admin.html` neu laden und mit `admin123` anmelden.
+4. Danach unter **Passwort ändern** sofort ein eigenes starkes Passwort setzen.
 
-Achtung: Wer diese Knoten löscht, kann den Admin-Zugang übernehmen. Der
-Firebase-Konsolenzugang muss deshalb gut geschützt sein.
+Alternativ können die Knoten `config/adminSalt` und `config/adminHash` gelöscht
+werden. Dann erscheint die Erstvergabe und es kann direkt ein neues Passwort
+gesetzt werden.
+
+Achtung: Wer diese Knoten ändert oder löscht, kann den Admin-Zugang übernehmen.
+Der Firebase-Konsolenzugang muss deshalb gut geschützt sein.
 
 ### Passwort ändern
 
@@ -372,11 +406,11 @@ Manuell zu prüfen:
 |---|---|
 | Banner „Demo-Modus“ | `js/firebase-config.js` enthält noch Platzhalter. Firebase-Werte eintragen. |
 | „Die Konfiguration konnte nicht geladen werden“ / Ladefehler | Prüfen, ob die Realtime Database unter der `databaseURL` existiert (Region), dann Regeln und Internetverbindung prüfen. |
-| Login immer „Passwort falsch.“ | Groß-/Kleinschreibung und Tastaturlayout prüfen; notfalls Hash in der Firebase Console zurücksetzen. |
+| Login immer „Passwort falsch.“ | Groß-/Kleinschreibung und Tastaturlayout prüfen; notfalls mit dem Standard-Passwort aus [Passwort vergessen](#passwort-vergessen) zurücksetzen. |
 | „Permission denied“ beim Speichern | `database.rules.json` passt nicht zu den geschriebenen Pfaden; Regeln erneut deployen. |
 | Keine WhatsApp-Vorschau | OG-Tags und `assets/og-image.png` müssen unter der öffentlichen HTTPS-URL erreichbar sein. |
 | Kamera/Smartphone zeigt veraltete Daten | Seite neu laden; Echtzeit-Updates benötigen eine aktive Verbindung. |
-| Admin-Lockout | `config/adminSalt` und `config/adminHash` in der Firebase Console löschen und Erstvergabe erneut durchlaufen. |
+| Admin-Lockout | `config/adminSalt` und `config/adminHash` durch die Standardwerte aus [Passwort vergessen](#passwort-vergessen) ersetzen und mit `admin123` anmelden. |
 
 ## Nicht enthalten
 
