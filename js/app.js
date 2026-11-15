@@ -443,21 +443,27 @@ function renderHeader() {
 }
 
 function renderFilters() {
-  const groupsExist = Object.keys(state.groups ?? {}).length > 0;
+  const active = getActiveFilterData();
+  const groupsExist = active.groups.length > 0;
 
   if (state.pendingUrlFilters) {
-    state.filters = validateFilters(state.pendingUrlFilters);
+    state.filters = validateFilters(state.pendingUrlFilters, active);
     state.pendingUrlFilters = null;
   } else {
-    state.filters = validateFilters(state.filters);
+    state.filters = validateFilters(state.filters, active);
   }
 
+  const availability = {
+    stand: active.stands.length > 0,
+    shift: active.shifts.length > 0,
+    group: groupsExist
+  };
+
   const signature = JSON.stringify({
-    stands: sortByOrder(state.stands).map(([id, stand]) => [id, stand.name]),
-    shifts: sortByOrder(state.shifts).map(([id, shift]) => [id, shift.name]),
-    groups: groupsExist
-      ? sortByOrder(state.groups).map(([id, group]) => [id, group.name])
-      : []
+    stands: active.stands.map(([id, stand]) => [id, stand.name]),
+    shifts: active.shifts.map(([id, shift]) => [id, shift.name]),
+    groups: active.groups.map(([id, group]) => [id, group.name]),
+    hasUngroupedStands: active.hasUngroupedStands
   });
 
   if (signature !== state.filterSignature) {
@@ -465,24 +471,35 @@ function renderFilters() {
     closeFilterMenus();
     buildFilterMenu("stand", [
       { value: "", label: "Alle" },
-      ...sortByOrder(state.stands).map(([id, stand]) => ({ value: id, label: stand.name || "Stand" }))
+      ...active.stands.map(([id, stand]) => ({ value: id, label: stand.name || "Stand" }))
     ]);
     buildFilterMenu("shift", [
       { value: "", label: "Alle" },
-      ...sortByOrder(state.shifts).map(([id, shift]) => ({ value: id, label: shift.name || "Schicht" }))
+      ...active.shifts.map(([id, shift]) => ({ value: id, label: shift.name || "Schicht" }))
     ]);
-    buildFilterMenu("group", [
+    const groupOptions = [
       { value: "", label: "Alle" },
-      ...sortByOrder(state.groups).map(([id, group]) => ({ value: id, label: group.name || "Gruppe" })),
-      { value: "__none__", label: "Ohne Gruppe" }
-    ]);
+      ...active.groups.map(([id, group]) => ({ value: id, label: group.name || "Gruppe" }))
+    ];
+    if (active.hasUngroupedStands) {
+      groupOptions.push({ value: "__none__", label: "Ohne Gruppe" });
+    }
+    buildFilterMenu("group", groupOptions);
     state.filterSignature = signature;
-    if (wasOpen) openFilterMenu(wasOpen);
+    if (wasOpen && availability[wasOpen]) openFilterMenu(wasOpen);
   }
 
-  const groupWrap = qs("#filter-group-wrap");
-  if (groupWrap) groupWrap.hidden = !groupsExist;
+  let anyAvailable = false;
+  for (const name of ["stand", "shift", "group"]) {
+    const wrap = qs(`.filter[data-filter="${name}"]`);
+    if (wrap) wrap.hidden = !availability[name];
+    if (availability[name]) anyAvailable = true;
+  }
+
   if (!groupsExist) state.filters.group = "";
+
+  const filterBar = qs("#filter-bar");
+  if (filterBar) filterBar.hidden = !anyAvailable;
 
   qs("#filter-stand-value").textContent =
     labelForFilter("stand", state.filters.stand) || "Alle";
@@ -499,7 +516,7 @@ function renderFilters() {
 
   const inner = qs("#filter-inner");
   const loading = qs("#filter-loading");
-  if (inner) inner.hidden = false;
+  if (inner) inner.hidden = !anyAvailable;
   if (loading) loading.hidden = true;
 
   for (const name of ["stand", "shift", "group"]) {
@@ -678,16 +695,20 @@ function readFiltersFromUrl() {
   }
 }
 
-function validateFilters(filters) {
+function validateFilters(filters, active) {
   const next = {
-    stand: state.stands?.[filters.stand] ? filters.stand : "",
-    shift: state.shifts?.[filters.shift] ? filters.shift : "",
+    stand: active.activeStandIds.has(filters.stand) ? filters.stand : "",
+    shift: active.activeShiftIds.has(filters.shift) ? filters.shift : "",
     group: ""
   };
 
-  if (filters.group === "__none__" && Object.keys(state.groups ?? {}).length > 0) {
+  if (
+    filters.group === "__none__" &&
+    active.groups.length > 0 &&
+    active.hasUngroupedStands
+  ) {
     next.group = "__none__";
-  } else if (state.groups?.[filters.group]) {
+  } else if (active.groupIds.has(filters.group)) {
     next.group = filters.group;
   }
 
@@ -1069,6 +1090,50 @@ function hasAnyActiveShift() {
     }
   }
   return false;
+}
+
+/**
+ * Ermittelt die Filter-Einträge anhand der Helfersicht: Aktiv ist, was in der
+ * Bedarfsmatrix einen Bedarf größer 0 hat. Konfigurierte, aber ungenutzte
+ * Stände, Schichten und Gruppen erscheinen dadurch nicht im Filter.
+ */
+function getActiveFilterData() {
+  const activeShiftIds = new Set();
+  const activeStandIds = new Set();
+
+  for (const shiftId of Object.keys(state.shifts ?? {})) {
+    for (const standId of Object.keys(state.stands ?? {})) {
+      if (getDemand(shiftId, standId) > 0) {
+        activeShiftIds.add(shiftId);
+        activeStandIds.add(standId);
+      }
+    }
+  }
+
+  const stands = sortByOrder(state.stands).filter(([id]) => activeStandIds.has(id));
+  const shifts = sortByOrder(state.shifts).filter(([id]) => activeShiftIds.has(id));
+
+  const groupIds = new Set();
+  let hasUngroupedStands = false;
+  for (const [, stand] of stands) {
+    if (stand.groupId && state.groups?.[stand.groupId]) {
+      groupIds.add(stand.groupId);
+    } else {
+      hasUngroupedStands = true;
+    }
+  }
+
+  const groups = sortByOrder(state.groups).filter(([id]) => groupIds.has(id));
+
+  return {
+    stands,
+    shifts,
+    groups,
+    groupIds,
+    activeShiftIds,
+    activeStandIds,
+    hasUngroupedStands
+  };
 }
 
 function allDataLoaded() {
