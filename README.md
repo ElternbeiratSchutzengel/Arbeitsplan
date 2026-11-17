@@ -35,9 +35,9 @@ Die verbindliche Implementierungsspezifikation steht in
 - Bedarfsmatrix bearbeiten; beim Reduzieren werden überzählige Einträge nach
   Bestätigung gelöscht
 - Datenprüfung für verwaiste Einträge und ungültige Gruppenverweise
-- PDF-Export der Helferliste im A4-Querformat (ohne Kopf- und Fußzeile) sowie
-  Import und Export der Konfiguration als JSON
-  (ohne Helfer-Einträge)
+- PDF-Export der Helferliste im A4-Querformat mit Titelzeile aus
+  Veranstaltungsname und Datum sowie Import und Export der Konfiguration als
+  JSON (ohne Helfer-Einträge)
 - Passwort ändern sowie abgestufte Reset-Funktionen
 
 ## Technik

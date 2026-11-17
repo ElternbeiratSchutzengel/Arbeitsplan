@@ -16,17 +16,24 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", {
   timeZone: "Europe/Berlin"
 });
 
+const dateWithoutWeekdayFormatter = new Intl.DateTimeFormat("de-DE", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Europe/Berlin"
+});
+
 const dateTimeFormatter = new Intl.DateTimeFormat("de-DE", {
   dateStyle: "medium",
   timeStyle: "short",
   timeZone: "Europe/Berlin"
 });
 
-export function formatEventDate(isoDate) {
+export function formatEventDate(isoDate, { withWeekday = true } = {}) {
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return "";
   const date = new Date(`${isoDate}T12:00:00Z`);
   if (Number.isNaN(date.getTime())) return "";
-  return dateFormatter.format(date);
+  return (withWeekday ? dateFormatter : dateWithoutWeekdayFormatter).format(date);
 }
 
 export function formatDateTime(timestamp) {

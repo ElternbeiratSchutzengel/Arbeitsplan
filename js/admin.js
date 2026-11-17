@@ -3339,6 +3339,12 @@ function pdfTextWidth(doc, text, fontSize, fontStyle = "normal") {
   return doc.getTextWidth(text);
 }
 
+function helferListPdfTitle() {
+  const eventName = String(state.config.eventName || "").trim() || "Helferplan";
+  const dateLabel = formatEventDate(state.config.eventDate, { withWeekday: false });
+  return dateLabel ? `${eventName}, ${dateLabel}` : eventName;
+}
+
 function longestTokenWidth(doc, values, fontSize, fontStyle = "normal") {
   let width = 0;
   for (const value of values) {
@@ -3492,6 +3498,23 @@ function exportHelferListPdf() {
     });
 
     const layout = helferListPdfLayout(doc, table);
+    const title = helferListPdfTitle();
+    const titleBaseSize = 14;
+    const titleWidth = pdfTextWidth(doc, title, titleBaseSize, "bold");
+    const titleFontSize =
+      titleWidth > layout.tableWidth
+        ? Math.max(9, (titleBaseSize * layout.tableWidth) / titleWidth)
+        : titleBaseSize;
+    const titleBaseline = layout.margin + titleFontSize * 0.3528;
+    const tableStartY = titleBaseline + 4;
+
+    const drawTitle = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(titleFontSize);
+      doc.setTextColor(17, 32, 48);
+      doc.text(title, layout.margin, titleBaseline);
+    };
+
     const columnStyles = {
       0: { cellWidth: layout.standWidth, fontStyle: "bold", halign: "left" }
     };
@@ -3499,12 +3522,14 @@ function exportHelferListPdf() {
       columnStyles[index] = { cellWidth: layout.shiftWidth, halign: "left" };
     }
 
+    doc.setProperties({ title });
+
     doc.autoTable({
       head: table.head,
       body: table.body,
-      startY: layout.margin,
+      startY: tableStartY,
       margin: {
-        top: layout.margin,
+        top: tableStartY,
         right: layout.margin,
         bottom: layout.margin,
         left: layout.margin
@@ -3532,6 +3557,9 @@ function exportHelferListPdf() {
         lineWidth: 0.1
       },
       columnStyles,
+      didDrawPage() {
+        drawTitle();
+      },
       didParseCell(data) {
         if (data.section === "head" && data.column.index === 0) {
           data.cell.styles.halign = "left";
