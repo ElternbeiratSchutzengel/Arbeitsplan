@@ -60,7 +60,7 @@ Eine moderne, schlanke und mobil-optimierte Web-App zur einfachen Organisation v
 * Der Schichtplan ist auf einem Smartphone ab 320 px Breite ohne horizontales Scrollen der Hauptseite nutzbar; nur die Filterleiste darf horizontal scrollen.
 * Änderungen sind auf allen geöffneten Geräten ohne manuelles Neuladen sichtbar.
 * Die Anwendung ist vollständig auf Deutsch und für ältere Vereinsmitglieder gut lesbar.
-* Ein Druck-Export liefert eine vollständige, weiterverarbeitbare Helferliste.
+* Ein PDF-Export liefert eine vollständige, weiterverarbeitbare Helferliste im Querformat.
 * Die Admin-Konfiguration lässt sich als JSON sichern und wieder importieren; die Datei enthält keine Helfer-Einträge.
 
 #### 1.3 Zielgruppe
@@ -346,10 +346,10 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 
 #### 5.8 Export
 
-* **FR-A-60 (MUSS):** Der Admin kann die Helferliste drucken bzw. als PDF speichern. Der Button öffnet den Browser-Druckdialog.
-* **FR-A-61 (MUSS):** Das Drucklayout ist standardmäßig A4 Querformat mit Veranstaltungsheader (Verein, Veranstaltung, Datum, Ort), Tabelle und Generierungszeitpunkt.
-* **FR-A-62 (MUSS):** Die Drucktabelle ist eine Matrix und enthält unabhängig von aktiven Filtern alle Schichten und Stände: Die erste Spalte listet die Stände mit Gruppe, die erste Zeile alle Schichten mit ihren Zeiten. Jede Zelle enthält die belegten Plätze mit Namen; freie Plätze werden als „frei“ ausgegeben.
-* **FR-A-63 (MUSS):** Navigation, Filter, Buttons, WhatsApp-Karte, Footer-Links und Schatten werden im Druck ausgeblendet. Es werden keine Seiten mitten in einer Tabellenzeile umbrochen.
+* **FR-A-60 (MUSS):** Der Admin kann die Helferliste als PDF exportieren. Der Button erzeugt die PDF-Datei im Browser und lädt sie herunter; ein Browser-Druckdialog ist nicht erforderlich.
+* **FR-A-61 (MUSS):** Das PDF ist standardmäßig A4 Querformat und enthält ausschließlich die Tabelle. Auf Kopf- und Fußzeile (Veranstaltungsdaten, Generierungszeitpunkt, Seitenzahlen) wird verzichtet, damit eine cleane Tabellenansicht entsteht.
+* **FR-A-62 (MUSS):** Die PDF-Tabelle ist eine Matrix und enthält unabhängig von aktiven Filtern alle Schichten und Stände: Die erste Spalte listet die Stände mit Gruppe, die erste Zeile alle Schichten mit ihren Zeiten. Jede Zelle enthält die belegten Plätze mit Namen; freie Plätze werden als „frei“ ausgegeben.
+* **FR-A-63 (MUSS):** Die Tabelle nutzt die verfügbare Seitenbreite und -höhe optimal. Schriftgröße und Spaltenbreiten passen sich an die Anzahl der Schichten und die längsten Inhalte an; es werden keine Seiten mitten in einer Tabellenzeile umbrochen.
 * **FR-A-90 (MUSS):** Der Admin kann die Konfiguration unter „Sicherung“ als JSON exportieren. Die Datei enthält Veranstaltungsdaten, Stände mit Farben und Icons, Gruppen, Schichten und Bedarf. Sie enthält keine Helfer-Einträge, keine Admin-Zugangsdaten und kein Audit-Log. Der Standard-Dateiname lautet `YYYY-MM-DD_Titel.json`, wobei `Titel` der Veranstaltungsname ist.
 * **FR-A-91 (MUSS):** Der Admin kann eine zuvor exportierte Konfigurationsdatei importieren. Die Datei wird vor der Übernahme validiert; Fehler werden verständlich angezeigt, und der Import erfolgt erst nach einer Bestätigung. Importiert werden ausschließlich die Konfigurationsdaten; vorhandene Helfer-Einträge bleiben erhalten, sofern sie weiterhin zu Ständen, Schichten und Bedarf passen, andernfalls werden sie entfernt. Admin-Passwort und Audit-Log bleiben unverändert.
 
@@ -713,7 +713,7 @@ Die Tokens werden in `tailwind.config.js` als `colors.navy`, `boxShadow.card` un
 * **Leerzustände:** Freundliche deutsche Meldung mit klarer nächster Aktion.
 * **Ladezustand:** Skeleton-Karten in der Form der späteren Inhalte.
 * **Offline-Banner:** Volle Breite, dezenter Amber-Hintergrund, deutscher Text, optional Retry.
-* **Drucklayout:** Schwarzer Text auf Weiß, Tabellenlinien, keine Schatten, keine Navigation.
+* **PDF-Layout:** Schwarzer Text auf Weiß, Tabellenlinien, keine Schatten, keine Navigation, keine Kopf- oder Fußzeile.
 
 > **Bewusste Abweichung von Design 1:** Der Prototyp zeigt in der Abendschicht kompakte Standzeilen. Gemäß FR-H-28 und FR-H-29 werden in Version 1 alle Schichten mit aufgeklappten Slot-Karten dargestellt. Die Kompaktvariante ist nicht umzusetzen.
 
@@ -851,7 +851,7 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * **AC-17 – CRUD Stände/Schichten/Gruppen:** Given ich lege einen Stand, eine Schicht und eine Gruppe an. Then erscheinen sie in der Helfer-Ansicht; Löschen entfernt die zugehörigen Daten nach Bestätigung.
 * **AC-18 – Bedarf reduzieren:** Given ein Stand hat 3 belegte Plätze. When ich den Bedarf auf 2 senke und bestätige. Then wird der überzählige Platz gelöscht und die Belegung zeigt 2/2.
 * **AC-19 – Einträge zurücksetzen:** Given es gibt Einträge. When ich „Einträge zurücksetzen“ bestätige. Then sind alle Assignments gelöscht, die Konfiguration bleibt erhalten und die Zähler stehen auf 0.
-* **AC-21 – Druck/PDF:** Given ich öffne den Druckdialog. Then sind Navigation, Filter und Buttons ausgeblendet und die Helferliste ist als Matrix mit Ständen in der ersten Spalte und Schichten samt Zeiten in der ersten Zeile auf A4 lesbar.
+* **AC-21 – PDF-Export:** Given ich öffne den Bereich „Helferliste als PDF“. When ich den Export starte. Then wird eine PDF-Datei im A4-Querformat heruntergeladen, die ausschließlich die Helferliste als Matrix mit Ständen in der ersten Spalte und Schichten samt Zeiten in der ersten Zeile enthält; Kopf- und Fußzeile fehlen.
 * **AC-22 – Barrierefreiheit:** Given ich navigiere nur mit der Tastatur. Then sind alle Funktionen erreichbar und der Fokus ist sichtbar.
 * **AC-23 – Mobile 320 px:** Given ich öffne die Seite bei 320 px Breite. Then gibt es keinen horizontalen Überlauf außerhalb der Filterleiste; alle Inhalte sind lesbar.
 * **AC-24 – Offline:** Given ich bin offline und lasse die Seite geöffnet. When ich einen Eintrag speichere. Then erscheint das Offline-Banner, der Platz zeigt „Wird synchronisiert“ und der Eintrag wird nach Wiederverbindung ohne Reload synchronisiert.
