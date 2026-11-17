@@ -10,6 +10,8 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
+  <script src="js/vendor/jspdf.umd.min.js" defer></script>
+  <script src="js/vendor/jspdf.plugin.autotable.min.js" defer></script>
   <script type="module" src="js/admin.js"></script>
 </head>
 <body class="admin-body">
@@ -69,7 +71,6 @@
       <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
       <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
       <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
-      <symbol id="i-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></symbol>
       <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
     </defs>
   </svg>
@@ -179,7 +180,7 @@
             <svg class="icon icon-sm" aria-hidden="true"><use href="#i-table"/></svg>Bedarf
           </button>
           <button type="button" class="admin-nav-item" data-section="export">
-            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-printer"/></svg>Drucken
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg>PDF
           </button>
           <button type="button" class="admin-nav-item" data-section="sicherung">
             <svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg>Sicherung
@@ -563,28 +564,24 @@
           </div>
         </section>
 
-        <!-- Helferliste drucken -->
+        <!-- Helferliste als PDF -->
         <section class="admin-section" data-panel="export" hidden>
           <div class="admin-page-head">
             <div>
-              <h1 class="admin-page-title">Helferliste drucken</h1>
-              <p class="admin-page-subtitle">Helferliste drucken oder als PDF speichern. Die Konfiguration sichern Sie separat unter „Sicherung“.</p>
+              <h1 class="admin-page-title">Helferliste als PDF</h1>
+              <p class="admin-page-subtitle">Helferliste als PDF herunterladen. Die Konfiguration sichern Sie separat unter „Sicherung“.</p>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><div><h2>Helferliste</h2><p>Die Druckansicht enthält alle Schichten, Stände und Plätze – unabhängig von Filtern.</p></div></div>
+            <div class="panel-head"><div><h2>Helferliste</h2><p>Das PDF enthält alle Schichten, Stände und Plätze – unabhängig von Filtern – als Tabelle im A4-Querformat.</p></div></div>
             <div id="export-summary" class="export-summary">Noch keine Daten geladen.</div>
             <div class="button-row">
-              <button type="button" class="btn btn-primary" id="print-button">
-                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-printer"/></svg>Drucken / PDF
+              <button type="button" class="btn btn-primary" id="pdf-button">
+                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg>PDF herunterladen
               </button>
             </div>
             <p class="hint">Diese Ausgabe ist die Helferliste. Eine Sicherung der Admin-Konfiguration finden Sie im Bereich „Sicherung“.</p>
-          </div>
-
-          <div class="panel panel--muted">
-            <div class="panel-head"><div><h2>Hinweis zum Druck</h2><p>Die Druckansicht zeigt eine Matrix mit Ständen als Zeilen und Schichten samt Zeiten als Spalten im A4-Querformat. Navigation, Filter und Buttons werden automatisch ausgeblendet. Für ein PDF „Als PDF speichern“ als Ziel wählen.</p></div></div>
           </div>
         </section>
 
@@ -690,7 +687,7 @@
           <div class="admin-page-head">
             <div>
               <h1 class="admin-page-title">Zurücksetzen</h1>
-              <p class="admin-page-subtitle">Bitte vorher die Helferliste über „Drucken / PDF“ sichern. Alle Aktionen sind endgültig.</p>
+              <p class="admin-page-subtitle">Bitte vorher die Helferliste als PDF sichern. Alle Aktionen sind endgültig.</p>
             </div>
           </div>
 
@@ -754,15 +751,5 @@
       </div>
     </div>
   </div>
-
-  <!-- Druckbereich -->
-  <section class="print-area" id="print-area" aria-hidden="true">
-    <header id="print-header"></header>
-    <table class="print-table" id="print-table">
-      <thead id="print-thead"></thead>
-      <tbody id="print-tbody"></tbody>
-    </table>
-    <p class="print-generated" id="print-generated"></p>
-  </section>
 </body>
 </html>

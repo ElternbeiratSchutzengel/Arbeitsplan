@@ -28,7 +28,6 @@ import {
   formatEventDate,
   formatDateTime,
   formatTimeRange,
-  displayClubName,
   groupForStand,
   sortByOrder,
   applyTone,
@@ -2462,7 +2461,7 @@ async function runIntegrityCheck() {
       `Es wurden ${issues.total} ${issues.total === 1 ? "Auffälligkeit" : "Auffälligkeiten"} gefunden:`,
       ...lines,
       "Beim Bereinigen werden ausschließlich die betroffenen ungültigen Einträge entfernt. Gültige Helfer-Einträge bleiben erhalten.",
-      "Bitte sichern Sie die Helferliste vorher bei Bedarf über „Drucken / PDF“."
+      "Bitte sichern Sie die Helferliste vorher bei Bedarf über „Helferliste als PDF“."
     ],
     confirmLabel: "Bereinigen",
     danger: true,
@@ -2626,22 +2625,26 @@ function renderConfigExportSummary() {
   if (button) button.disabled = false;
 }
 
-function configExportFileName() {
-  const eventDate = String(state.config.eventDate || "").trim();
-  const datePart = /^\d{4}-\d{2}-\d{2}$/.test(eventDate)
-    ? eventDate
-    : new Date().toISOString().slice(0, 10);
-  const title =
+function fileSafeEventTitle(maxLength = 80) {
+  return (
     String(state.config.eventName || "Helferplan")
       .trim()
       .replace(/[\\/:*?"<>|\u0000-\u001F\u007F]/g, "_")
       .replace(/\s+/g, " ")
       .replace(/_+/g, "_")
       .replace(/^[_.\s]+|[_.\s]+$/g, "")
-      .slice(0, 80)
-      .replace(/[_.\s]+$/g, "") || "Helferplan";
+      .slice(0, maxLength)
+      .replace(/[_.\s]+$/g, "") || "Helferplan"
+  );
+}
 
-  return `${datePart}_${title}.json`;
+function configExportFileName() {
+  const eventDate = String(state.config.eventDate || "").trim();
+  const datePart = /^\d{4}-\d{2}-\d{2}$/.test(eventDate)
+    ? eventDate
+    : new Date().toISOString().slice(0, 10);
+
+  return `${datePart}_${fileSafeEventTitle()}.json`;
 }
 
 function exportConfiguration() {
@@ -3314,102 +3317,233 @@ async function handleConfigImport() {
   });
 }
 
-function preparePrintView() {
-  const header = $("print-header");
-  const thead = $("print-thead");
-  const tbody = $("print-tbody");
-  const generated = $("print-generated");
-  if (!header || !thead || !tbody || !generated) return;
+/* --------------------------------------------------------------------------
+   PDF-Export der Helferliste
+   -------------------------------------------------------------------------- */
 
+function pdfConstructor() {
+  return window.jspdf && typeof window.jspdf.jsPDF === "function" ? window.jspdf.jsPDF : null;
+}
+
+function helferListFileName() {
+  const eventDate = String(state.config.eventDate || "").trim();
+  const datePart = /^\d{4}-\d{2}-\d{2}$/.test(eventDate)
+    ? eventDate
+    : new Date().toISOString().slice(0, 10);
+  return `${datePart}_${fileSafeEventTitle(60)}_Helferliste.pdf`;
+}
+
+function pdfTextWidth(doc, text, fontSize, fontStyle = "normal") {
+  doc.setFont("helvetica", fontStyle);
+  doc.setFontSize(fontSize);
+  return doc.getTextWidth(text);
+}
+
+function longestTokenWidth(doc, values, fontSize, fontStyle = "normal") {
+  let width = 0;
+  for (const value of values) {
+    for (const token of String(value ?? "").split(/\s+/)) {
+      if (!token) continue;
+      width = Math.max(width, pdfTextWidth(doc, token, fontSize, fontStyle));
+    }
+  }
+  return width;
+}
+
+function buildHelferListTable() {
   const shifts = sortedShifts();
   const stands = sortedStands();
 
-  clearElement(header);
-  header.className = "print-header";
-  header.append(createEl("h1", "", String(state.config.eventName || "Helferplan")));
-  header.append(createEl("p", "", displayClubName(state.config.clubName)));
-  const metaParts = [formatEventDate(state.config.eventDate), state.config.eventLocation].filter(
-    Boolean
-  );
-  if (metaParts.length > 0) header.append(createEl("p", "", metaParts.join(" · ")));
-  header.append(createEl("p", "print-meta", "Helferliste – Stände je Schicht"));
+  const head = [
+    [
+      "Stand",
+      ...shifts.map(([, shift]) => {
+        const name = String(shift?.name ?? "Schicht");
+        const timeLabel = formatTimeRange(shift?.start, shift?.end, { withUhr: false });
+        return timeLabel ? `${name}\n${timeLabel}` : name;
+      })
+    ]
+  ];
 
-  clearElement(thead);
-  const headRow = createEl("tr");
-  const corner = createEl("th", "print-corner", "Stand");
-  corner.scope = "col";
-  headRow.append(corner);
+  const standLabels = [];
+  const body = stands.map(([standId, stand]) => {
+    const group = groupForStand(state.groups, stand);
+    const standName = String(stand?.name ?? "Stand");
+    const standLabel = group?.name ? `${standName}\n${group.name}` : standName;
+    standLabels.push(standLabel);
 
-  for (const [, shift] of shifts) {
-    const cell = createEl("th", "print-shift");
-    cell.scope = "col";
-    cell.append(createEl("span", "print-shift-name", String(shift?.name ?? "Schicht")));
-    const timeLabel = formatTimeRange(shift?.start, shift?.end);
-    if (timeLabel) cell.append(createEl("span", "print-shift-time", timeLabel));
-    headRow.append(cell);
-  }
-  thead.append(headRow);
-
-  clearElement(tbody);
-  let total = 0;
-  let filled = 0;
-
-  if (stands.length === 0 || shifts.length === 0) {
-    const row = createEl("tr");
-    const cell = createEl(
-      "td",
-      "print-empty-row",
-      stands.length === 0 ? "Keine Stände vorhanden." : "Keine Schichten vorhanden."
-    );
-    cell.colSpan = Math.max(1, shifts.length + 1);
-    row.append(cell);
-    tbody.append(row);
-  } else {
-    for (const [standId, stand] of stands) {
-      const row = createEl("tr");
-      const label = createEl("th", "print-stand");
-      label.scope = "row";
-      label.append(createEl("span", "print-stand-name", String(stand?.name ?? "Stand")));
-      const group = groupForStand(state.groups, stand);
-      if (group) label.append(createEl("span", "print-stand-group", group.name));
-      row.append(label);
-
-      for (const [shiftId] of shifts) {
-        const demand = getDemandValue(shiftId, standId);
-        const slots = assignmentSlots(shiftId, standId);
-        const cell = createEl("td", "print-slots");
-
-        if (demand <= 0) {
-          cell.classList.add("print-slots--unused");
-          cell.append(createEl("span", "print-no-demand", "–"));
-        } else {
-          for (let slotIndex = 0; slotIndex < demand; slotIndex += 1) {
-            const record = slots[String(slotIndex)];
-            const name =
-              isObject(record) && typeof record.name === "string" ? record.name.trim() : "";
-            total += 1;
-            if (name) {
-              filled += 1;
-              cell.append(createEl("span", "print-slot print-slot--filled", name));
-            } else {
-              cell.append(createEl("span", "print-slot print-slot--free", "frei"));
-            }
+    const row = [standLabel];
+    for (const [shiftId] of shifts) {
+      const demand = getDemandValue(shiftId, standId);
+      if (demand <= 0) {
+        row.push({
+          content: "–",
+          styles: {
+            fillColor: [235, 238, 241],
+            textColor: [110, 116, 122],
+            halign: "center"
           }
-        }
-
-        row.append(cell);
+        });
+        continue;
       }
-      tbody.append(row);
+
+      const slots = assignmentSlots(shiftId, standId);
+      const lines = [];
+      let filled = 0;
+      for (let slotIndex = 0; slotIndex < demand; slotIndex += 1) {
+        const record = slots[String(slotIndex)];
+        const name =
+          isObject(record) && typeof record.name === "string" ? record.name.trim() : "";
+        if (name) {
+          filled += 1;
+          lines.push(name);
+        } else {
+          lines.push("frei");
+        }
+      }
+
+      const cell = { content: lines.join("\n") };
+      if (filled === 0) {
+        cell.styles = { textColor: [110, 116, 122], fontStyle: "italic" };
+      }
+      row.push(cell);
+    }
+
+    return row;
+  });
+
+  return { head, body, shifts, stands, standLabels };
+}
+
+function helferListPdfLayout(doc, table) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 8;
+  const tableWidth = pageWidth - margin * 2;
+  const shiftCount = Math.max(1, table.shifts.length);
+
+  // Grundgröße abhängig von der Spaltenzahl; wird unten an die Spaltenbreite angepasst.
+  let fontSize =
+    shiftCount <= 3 ? 10 : shiftCount <= 5 ? 9 : shiftCount <= 7 ? 8 : shiftCount <= 10 ? 7 : 6.4;
+
+  const standWidthAt = (size) => {
+    const widest = longestTokenWidth(doc, table.standLabels, size, "bold");
+    return Math.min(Math.max(28, widest + size * 0.7 + 2), tableWidth * 0.34);
+  };
+
+  let standWidth = standWidthAt(fontSize);
+  let shiftWidth = (tableWidth - standWidth) / shiftCount;
+
+  const shiftTexts = [...table.head[0].slice(1)];
+  for (const row of table.body) {
+    for (let index = 1; index < row.length; index += 1) {
+      const cell = row[index];
+      shiftTexts.push(typeof cell === "string" ? cell : cell.content);
     }
   }
 
-  const free = total - filled;
-  generated.textContent = `${filled} von ${total} Plätzen belegt · ${free} frei · Erstellt am ${formatDateTime(Date.now())} Uhr`;
+  // Schrift verkleinern, bis das längste Wort in eine Schichtspalte passt.
+  const widestShiftToken = Math.max(
+    longestTokenWidth(doc, table.head[0].slice(1), fontSize, "bold"),
+    longestTokenWidth(doc, shiftTexts, fontSize, "normal")
+  );
+  const availableShiftWidth = Math.max(6, shiftWidth - fontSize * 0.5);
+  if (widestShiftToken > availableShiftWidth) {
+    fontSize = Math.max(5.5, (fontSize * availableShiftWidth) / widestShiftToken);
+  }
+
+  // Stände-Spalte: nach Inhalt bemessen, aber genug Platz für alle Schichten lassen.
+  standWidth = standWidthAt(fontSize);
+  standWidth = Math.min(standWidth, Math.max(22, tableWidth - shiftCount * 14));
+  standWidth = Math.max(22, standWidth);
+  shiftWidth = (tableWidth - standWidth) / shiftCount;
+
+  const padding = Math.max(1, Math.min(2.4, fontSize * 0.25));
+
+  return { margin, tableWidth, fontSize, padding, standWidth, shiftWidth, shiftCount };
 }
 
-function printHelferList() {
-  preparePrintView();
-  window.setTimeout(() => window.print(), 60);
+function exportHelferListPdf() {
+  if (!dataReady()) {
+    showToast("Die Daten werden noch geladen. Bitte versuchen Sie es gleich erneut.", "info");
+    return;
+  }
+
+  const JsPDF = pdfConstructor();
+  if (!JsPDF) {
+    showToast("Der PDF-Export konnte nicht geladen werden. Bitte laden Sie die Seite neu.", "error");
+    return;
+  }
+
+  const table = buildHelferListTable();
+  if (table.stands.length === 0 || table.shifts.length === 0) {
+    showToast(
+      "Für den PDF-Export müssen mindestens ein Stand und eine Schicht vorhanden sein.",
+      "info"
+    );
+    return;
+  }
+
+  try {
+    const doc = new JsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+      compress: true
+    });
+
+    const layout = helferListPdfLayout(doc, table);
+    const columnStyles = {
+      0: { cellWidth: layout.standWidth, fontStyle: "bold", halign: "left" }
+    };
+    for (let index = 1; index <= layout.shiftCount; index += 1) {
+      columnStyles[index] = { cellWidth: layout.shiftWidth, halign: "left" };
+    }
+
+    doc.autoTable({
+      head: table.head,
+      body: table.body,
+      startY: layout.margin,
+      margin: {
+        top: layout.margin,
+        right: layout.margin,
+        bottom: layout.margin,
+        left: layout.margin
+      },
+      tableWidth: layout.tableWidth,
+      theme: "grid",
+      showHead: "everyPage",
+      rowPageBreak: "avoid",
+      styles: {
+        font: "helvetica",
+        fontSize: layout.fontSize,
+        cellPadding: layout.padding,
+        overflow: "linebreak",
+        lineColor: [150, 156, 162],
+        lineWidth: 0.1,
+        textColor: [24, 32, 40],
+        valign: "top"
+      },
+      headStyles: {
+        fillColor: [232, 236, 240],
+        textColor: [17, 32, 48],
+        fontStyle: "bold",
+        halign: "center",
+        valign: "bottom",
+        lineWidth: 0.1
+      },
+      columnStyles,
+      didParseCell(data) {
+        if (data.section === "head" && data.column.index === 0) {
+          data.cell.styles.halign = "left";
+        }
+      }
+    });
+
+    doc.save(helferListFileName());
+  } catch (error) {
+    console.error(error);
+    showToast("Das PDF konnte nicht erstellt werden. Bitte versuchen Sie es erneut.", "error");
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -3432,7 +3566,7 @@ async function resetEntries() {
       includeAudit
         ? "Das Audit-Log wird ebenfalls vollständig gelöscht."
         : "Das Audit-Log bleibt erhalten; vor dem Löschen wird ein Reset-Eintrag geschrieben.",
-      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter, falls Sie die aktuellen Einträge noch benötigen."
+      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Helferliste als PDF“ herunter, falls Sie die aktuellen Einträge noch benötigen."
     ],
     confirmLabel: "Einträge zurücksetzen",
     danger: true,
@@ -3471,7 +3605,7 @@ async function resetConfiguration() {
     message: [
       "Helfer-Einträge, Bedarf, Stände, Schichten und Gruppen werden endgültig gelöscht.",
       "Veranstaltungsdaten, Admin-Passwort und Audit-Log bleiben erhalten.",
-      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter, falls Sie die aktuelle Planung noch benötigen."
+      "Bitte laden Sie vorher bei Bedarf die Helferliste über „Helferliste als PDF“ herunter, falls Sie die aktuelle Planung noch benötigen."
     ],
     confirmLabel: "Konfiguration zurücksetzen",
     danger: true,
@@ -3522,7 +3656,7 @@ async function resetEverything() {
     message: [
       "Alle Event-Daten werden endgültig gelöscht: Veranstaltungsdaten, Admin-Passwort, Stände, Schichten, Gruppen, Bedarf, Helfer-Einträge und Audit-Log.",
       "Danach erscheint die Erstvergabe und Sie müssen ein neues Admin-Passwort festlegen.",
-      "Diese Aktion kann nicht rückgängig gemacht werden. Bitte laden Sie vorher bei Bedarf die Helferliste über „Drucken / PDF“ herunter."
+      "Diese Aktion kann nicht rückgängig gemacht werden. Bitte laden Sie vorher bei Bedarf die Helferliste über „Helferliste als PDF“ herunter."
     ],
     confirmLabel: "Alles löschen",
     danger: true,
@@ -3755,7 +3889,7 @@ function bindEvents() {
   $("demand-save")?.addEventListener("click", handleDemandSave, { signal });
 
   $("run-integrity-check")?.addEventListener("click", runIntegrityCheck, { signal });
-  $("print-button")?.addEventListener("click", printHelferList, { signal });
+  $("pdf-button")?.addEventListener("click", exportHelferListPdf, { signal });
 
   $("config-export-button")?.addEventListener("click", exportConfiguration, { signal });
   $("config-import-choose")?.addEventListener(

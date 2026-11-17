@@ -35,7 +35,8 @@ Die verbindliche Implementierungsspezifikation steht in
 - Bedarfsmatrix bearbeiten; beim Reduzieren werden überzählige Einträge nach
   Bestätigung gelöscht
 - Datenprüfung für verwaiste Einträge und ungültige Gruppenverweise
-- Druckansicht sowie Import und Export der Konfiguration als JSON
+- PDF-Export der Helferliste im A4-Querformat (ohne Kopf- und Fußzeile) sowie
+  Import und Export der Konfiguration als JSON
   (ohne Helfer-Einträge)
 - Passwort ändern sowie abgestufte Reset-Funktionen
 
@@ -43,6 +44,7 @@ Die verbindliche Implementierungsspezifikation steht in
 
 - Reines HTML, CSS und ES-Module; kein Build-Schritt erforderlich
 - Firebase JS SDK 10.14.1, dynamisch von `gstatic.com` geladen
+- jsPDF 2.5.2 und jsPDF-AutoTable 3.8.4 (MIT) lokal unter `js/vendor/` für den PDF-Export
 - Firebase Realtime Database (nicht Firestore)
 - Selbst gehostete Inter-Variable-Schrift
 - Demo-Modus über `localStorage`, solange `js/firebase-config.js` Platzhalter
@@ -376,7 +378,7 @@ Manuell zu prüfen:
 5. Admin-Erstvergabe, Login, falsches Passwort, Logout und Session-Timeout.
 6. Stände, Schichten und Gruppen anlegen, sortieren, löschen.
 7. Bedarf erhöhen und reduzieren; Löschbestätigung der überzähligen Plätze.
-8. Druck- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
+8. PDF- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
 9. Datenprüfung mit künstlich verwaisten Einträgen.
 10. Alle Reset-Stufen inklusive `ALLES LÖSCHEN` prüfen.
 11. Nach dem Löschen von `config/adminSalt` und `config/adminHash` die
