@@ -127,7 +127,7 @@
       }
     },
     "audit_log": {
-      ".read": false,
+      ".read": true,
       ".write": true,
       "$logId": {
         ".validate": "newData.hasChildren(['ts','action','entity','entityId','actor','source']) && newData.child('ts').isNumber() && newData.child('ts').val() > 0 && newData.child('action').isString() && newData.child('action').val().matches(/^(create|update|delete|reset)$/) && newData.child('entity').isString() && newData.child('entity').val().matches(/^(assignment|stand|shift|group|demand|config)$/) && newData.child('entityId').isString() && newData.child('entityId').val().length <= 200 && newData.child('actor').isString() && newData.child('actor').val().matches(/^(admin|helper)$/) && newData.child('source').isString() && newData.child('source').val().matches(/^(ui|import|system)$/)",

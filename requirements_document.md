@@ -41,7 +41,7 @@
 | Belegung | Anzahl bereits eingetragener Helfer |
 | Vollzählig | Alle Plätze eines Standes oder einer Schicht sind belegt |
 | Gruppe | Optionale Vereinsgruppe, z. B. Jugend, Vorstand oder Aktive |
-| Audit-Log | Hintergrundprotokoll für Änderungen an Einträgen und Konfiguration |
+| Audit-Log | Änderungsprotokoll für Einträge und Konfiguration mit filterbarer Ansicht im Admin-Bereich |
 | Helfer-Ansicht | Öffentliche, anonym nutzbare Schichtplan-Ansicht |
 | Admin-Bereich | Passwortgeschützte Konfigurations- und Verwaltungsansicht |
 
@@ -78,7 +78,7 @@ Eine moderne, schlanke und mobil-optimierte Web-App zur einfachen Organisation v
 | Rolle | Zugang | Rechte |
 |---|---|---|
 | Helfer | anonym, ohne Konto | Plan lesen, freie Plätze eintragen, bestehende Einträge bearbeiten und löschen |
-| Admin | Passwort | Alles, was Helfer dürfen, plus Konfiguration, Bedarf, Export, Zurücksetzen und Audit-Log-Einsicht über die Firebase Console |
+| Admin | Passwort | Alles, was Helfer dürfen, plus Konfiguration, Bedarf, Export, Zurücksetzen und Einsicht in das Protokoll |
 | System | automatisch | Erstkonfiguration erkennen, Statistiken berechnen, Echtzeit-Synchronisation, Audit-Log schreiben |
 
 #### 2.2 Einsatzszenario
@@ -134,7 +134,7 @@ Eine moderne, schlanke und mobil-optimierte Web-App zur einfachen Organisation v
 
 * **ARC-21 (MUSS):** Die Event-Daten (`config`, `groups`, `shifts`, `stands`, `demand`, `assignments`) sind öffentlich lesbar, damit die Helfer-Ansicht ohne Anmeldung funktioniert. Dazu gehört auch `config/adminHash`; siehe ARC-26.
 * **ARC-22 (MUSS):** Die Helfer-Ansicht schreibt ausschließlich auf `assignments/{shiftId}/{standId}/{slotIndex}`; auf diesen Pfaden validieren die Security Rules die Daten. Ohne Firebase Auth können die Security Rules Schreibzugriffe auf Konfigurationspfade technisch nicht verhindern; siehe ARC-26.
-* **ARC-23 (MUSS):** Das Audit-Log ist für Clients nicht lesbar (`.read: false`). Die Einsicht erfolgt über die Firebase Console. Es gibt in Version 1 keine Audit-Log-UI.
+* **ARC-23 (MUSS):** Das Audit-Log ist öffentlich lesbar (`.read: true`), damit die Protokoll-Ansicht im Admin-Bereich es anzeigen kann. Ohne Firebase Authentication ist der Lesezugriff nicht auf Admins beschränkt. Das Log ist clientseitig, nicht fälschungssicher und dient der Nachvollziehbarkeit, nicht als Beweis.
 * **ARC-24 (MUSS):** Das Admin-Passwort wird als gesalzener SHA-256-Hash in `config/adminHash` gespeichert; der Salt liegt in `config/adminSalt`. Der Hash wird mit der Web Crypto API (`crypto.subtle.digest`) berechnet.
 * **ARC-25 (MUSS):** Es wird kein Klartextpasswort und kein vorgegebener Hash im Quellcode hinterlegt.
 * **ARC-26 (MUSS):** Die Admin-Konfiguration ist ohne Firebase Auth technisch nicht gegen direkte Schreibzugriffe geschützt. Die Admin-Oberfläche und die `sessionStorage`-Session sind ein UI-Schutz, keine Server-Authentifizierung; die Session ist clientseitig manipulierbar, und es gibt kein serverseitiges Rate-Limiting für Passwortversuche. Dieses Restrisiko ist für den Vereinsbetrieb akzeptiert und muss im README und im Admin-Login sichtbar dokumentiert werden.
@@ -359,14 +359,14 @@ Der Admin-Bereich ist eine separate Seite `admin.html` im gleichen Designsystem.
 * **FR-A-72 (MUSS):** Bei Konfigurationsänderungen (Stand, Schicht, Gruppe, Bedarf, Veranstaltung) wird ebenfalls ein Audit-Log-Eintrag geschrieben. Bei Passwortänderungen werden weder alter noch neuer Hash oder Salt im Audit-Log gespeichert; der Eintrag enthält nur `action: update`, `entity: config` und `entityId: adminHash`.
 * **FR-A-73 (MUSS):** Ein Audit-Log-Eintrag enthält mindestens: `ts`, `action`, `entity`, `entityId`, `shiftId`, `standId`, `slotIndex`, `oldValue`, `newValue`, `actor`.
 * **FR-A-74 (MUSS):** `actor` ist `admin`, wenn im selben Tab eine gültige Admin-Session aktiv ist, sonst `helper`. Eine eindeutige Personenidentifikation gibt es nicht; der Wert ist nicht fälschungssicher.
-* **FR-A-75 (MUSS):** Das Audit-Log ist für Clients nicht lesbar. Die Einsicht erfolgt über die Firebase Console.
+* **FR-A-75 (MUSS):** Das Audit-Log ist öffentlich lesbar, damit der Admin es unter „Protokoll“ einsehen kann. Die Einsicht ist ohne Firebase Authentication nicht technisch auf Admins beschränkt; das Log ist nicht fälschungssicher.
 * **FR-A-76 (MUSS):** Das Audit-Log wird beim „Einträge zurücksetzen“ optional und bei „Alles löschen“ zwingend gelöscht. Die Aufbewahrung ist im Datenschutzhinweis zu beschreiben.
-* **FR-A-77 (SOLL):** Eine spätere Admin-UI für das Audit-Log ist möglich, erfordert aber eine echte Authentifizierung.
+* **FR-A-77 (MUSS):** Der Admin-Bereich bietet unter „Protokoll“ eine live aktualisierte, filterbare Ansicht aller Audit-Log-Einträge. Filter umfassen Suche, Aktion, Bereich, Akteur, Schicht, Stand sowie einen Zeitraum; Einträge werden nach Tagen gruppiert und die neuesten zuerst angezeigt. Stand-, Schicht- und Gruppennamen werden zum Zeitpunkt der Änderung aufgelöst; gelöschte Objekte werden als „(gelöscht)“ gekennzeichnet. Alte und neue Werte werden ohne rohe IDs verständlich dargestellt.
 
 #### 5.10 Admin-Oberfläche
 
 * **FR-A-78 (MUSS):** `admin.html` verwendet dasselbe Designsystem wie die Helfer-Ansicht (Farben, Typografie, Radien, Schatten, Fokusringe).
-* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Drucken, Sicherung, Passwort ändern, Zurücksetzen und Abmelden.
+* **FR-A-79 (MUSS):** Die Admin-Oberfläche hat folgende Bereiche: Übersicht, Veranstaltung, Stände, Schichten, Gruppen, Bedarf, Protokoll, Drucken, Sicherung, Passwort ändern, Zurücksetzen und Abmelden.
 * **FR-A-80 (MUSS):** Die Navigation ist auf Mobilgeräten horizontal scrollbar; auf Desktop als Tabs oder Seitenleiste.
 * **FR-A-81 (MUSS):** Formulare haben sichtbare Labels, Inline-Validierung, Speichern/Abbrechen und Toast-Feedback.
 * **FR-A-82 (MUSS):** Destruktive Aktionen öffnen einen Bestätigungsdialog mit klarer Konsequenzbeschreibung.
@@ -562,7 +562,7 @@ Die folgenden Regeln sind ein Startpunkt. Sie müssen im Firebase Emulator getes
       }
     },
     "audit_log": {
-      ".read": false,
+      ".read": true,
       ".write": true,
       "$logId": {
         ".validate": "newData.hasChildren(['ts','action','entity','actor'])"
@@ -574,7 +574,7 @@ Die folgenden Regeln sind ein Startpunkt. Sie müssen im Firebase Emulator getes
 
 Hinweise:
 
-* `audit_log` ist bewusst nicht lesbar; die Firebase Console umgeht die Regeln.
+* `audit_log` ist öffentlich lesbar, damit die Protokoll-Ansicht im Admin-Bereich funktioniert. Ohne Firebase Authentication ist der Lesezugriff nicht auf Admins beschränkt; die Firebase Console bleibt für administrative Eingriffe verfügbar.
 * `config` enthält `adminHash` und ist öffentlich lesbar. Das ist für den clientseitigen Login erforderlich und ein akzeptiertes Restrisiko.
 * Die Slot-Index-Validierung gegen `demand` ist in RTDB-Regeln aufwändig; sie wird zusätzlich in der App geprüft. Wenn eine serverseitige Validierung gewünscht ist, muss der Slot-Index im Datensatz mitgeführt oder auf Firebase Auth/Cloud Functions migriert werden.
 * Die Regeln erlauben das Löschen ganzer Knoten (z. B. für Reset). Das ist beabsichtigt, aber auch ein Angriffsvektor.
@@ -871,7 +871,6 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * Native Apps, PWA-Installation, Offline-App-Shell.
 * Dark Mode oder Theme-Umschalter.
 * Mehrsprachigkeit.
-* Admin-UI für das Audit-Log.
 * Cloud Functions oder eigene serverseitige Geschäftslogik; die Security Rules validieren ausschließlich Struktur und Wertebereiche.
 * Upload eines Vereinslogos; der Header verwendet eine Initialen-Kachel.
 * QR-Code zum Teilen.

@@ -38,6 +38,8 @@ Die verbindliche Implementierungsspezifikation steht in
 - PDF-Export der Helferliste im A4-Querformat mit Titelzeile aus
   Veranstaltungsname und Datum sowie Import und Export der Konfiguration als
   JSON (ohne Helfer-Einträge)
+- Protokoll mit Live-Aktualisierung, Filtern und aufgelösten Stand-, Schicht-
+  und Gruppennamen
 - Passwort ändern sowie abgestufte Reset-Funktionen
 
 ## Technik
@@ -284,6 +286,20 @@ Im Admin-Bereich unter **Passwort ändern** das aktuelle und das neue Passwort
 eingeben. Salt und Hash werden neu erzeugt; andere Sitzungen werden dadurch
 nicht automatisch beendet.
 
+### Protokoll
+
+Unter **Protokoll** zeigt der Admin-Bereich alle Änderungen an Helfer-Einträgen
+und an der Konfiguration. Die Liste aktualisiert sich live, gruppiert die
+Einträge nach Tagen (Europe/Berlin) und zeigt die neuesten Änderungen zuerst.
+Filter für Suche, Aktion, Bereich, Akteur, Schicht, Stand sowie „Von“ und „Bis“
+lassen sich kombinieren. Stand-, Schicht- und Gruppennamen werden zum Zeitpunkt
+der jeweiligen Änderung aufgelöst; gelöschte Objekte erscheinen mit dem Zusatz
+„(gelöscht)“. Ausklappbare Einträge zeigen alte und neue Werte im Klartext.
+
+Das Audit-Log ist dafür öffentlich lesbar. Ohne Firebase Authentication kann die
+Ansicht nicht auf Admins beschränkt werden; das Log bleibt clientseitig und ist
+nicht fälschungssicher.
+
 ## Datenmodell
 
 Die Daten liegen auf oberster Ebene in der Realtime Database. Es gibt genau eine
@@ -297,7 +313,7 @@ aktive Veranstaltung pro Deployment.
 | `stands/{standId}` | `name`, `icon`, `color`, `groupId`, `order` |
 | `demand/{shiftId}/{standId}` | Bedarf als Ganzzahl 0–20 |
 | `assignments/{shiftId}/{standId}/{slotIndex}` | `name`, `createdAt`, `updatedAt` |
-| `audit_log/{logId}` | `ts`, `action`, `entity`, `entityId`, `actor`, `source` und optionale Details |
+| `audit_log/{logId}` | `ts`, `action`, `entity`, `entityId`, `actor`, `source` und optionale Details; öffentlich lesbar für die Protokoll-Ansicht |
 
 Details, Feldlängen und Kaskaden stehen in
 [`requirements_document.md`](requirements_document.md), Abschnitt 6.
@@ -323,9 +339,11 @@ Produktiveinsatz gelesen werden:
   Sicherheitstoken.
 - **Keine serverseitigen Rate-Limits.** Login-Versuche können beliebig oft
   wiederholt werden.
-- **Das Audit-Log ist clientseitig und nicht fälschungssicher.** Es dient der
-  Nachvollziehbarkeit, nicht als Beweis. Clients dürfen es schreiben, aber nicht
-  lesen; die Firebase Console umgeht die Regeln.
+- **Das Audit-Log ist öffentlich lesbar und clientseitig.** Es dient der
+  Nachvollziehbarkeit, nicht als Beweis. Die Protokoll-Ansicht benötigt
+  Lesezugriff; ohne Firebase Authentication kann dieser nicht auf Admins
+  beschränkt werden. Clients dürfen das Log außerdem schreiben, aber nicht
+  nachträglich als vertrauenswürdige Quelle behandeln.
 - **Jeder Besucher kann Einträge ändern oder löschen.** Das offene
   Bearbeitungskonzept ist gewollt; es gibt keine Identitätsprüfung.
 - **Auch die Veranstaltungsdaten (`config`) sind öffentlich schreibbar.** Der
@@ -350,8 +368,10 @@ Teil von Version 1.
 - Ein Eintrag kann jederzeit über den Dialog geändert oder gelöscht werden.
   Admins können alle Einträge zurücksetzen oder vollständig löschen.
 - Das Audit-Log enthält Aktionsdaten (Zeitpunkt, Aktion, Entität, alte/neue
-  Werte) und wird beim vollständigen Reset gelöscht. Beim Zurücksetzen der
-  Einträge kann es optional mitgelöscht werden.
+  Werte einschließlich Helfernamen) und wird beim vollständigen Reset gelöscht.
+  Beim Zurücksetzen der Einträge kann es optional mitgelöscht werden. Es ist
+  öffentlich lesbar, damit die Protokoll-Ansicht funktioniert; ohne Firebase
+  Authentication ist der Lesezugriff nicht auf Admins beschränkt.
 - Im Demo-Modus liegen alle Daten im `localStorage` des jeweiligen Browsers.
 - Die Datenschutzhinweise in der App sind ein allgemeiner Entwurf und ersetzen
   keine rechtliche Prüfung. Impressumspflicht und DSGVO-Anforderungen sind vor
@@ -380,8 +400,10 @@ Manuell zu prüfen:
 7. Bedarf erhöhen und reduzieren; Löschbestätigung der überzähligen Plätze.
 8. PDF- und Konfigurationsexport prüfen; JSON-Datei wieder importieren.
 9. Datenprüfung mit künstlich verwaisten Einträgen.
-10. Alle Reset-Stufen inklusive `ALLES LÖSCHEN` prüfen.
-11. Nach dem Löschen von `config/adminSalt` und `config/adminHash` die
+10. Protokoll öffnen: Filter kombinieren, Zeitraum prüfen, gelöschte Stände und
+    Schichten sowie die Live-Aktualisierung nach einer Änderung kontrollieren.
+11. Alle Reset-Stufen inklusive `ALLES LÖSCHEN` prüfen.
+12. Nach dem Löschen von `config/adminSalt` und `config/adminHash` die
     Erstvergabe erneut durchlaufen.
 
 ## Betrieb und Wartung
@@ -418,4 +440,4 @@ Manuell zu prüfen:
 
 Mehrere gleichzeitige Veranstaltungen, Helfer-Konten, PWA-Installation,
 Dark Mode, Zahlungen, automatische Benachrichtigungen, Upload eines
-Vereinslogos, QR-Codes und eine Admin-UI für das Audit-Log.
+Vereinslogos, QR-Codes und eine serverseitige Authentifizierung.

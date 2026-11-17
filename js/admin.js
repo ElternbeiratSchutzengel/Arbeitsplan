@@ -24,6 +24,7 @@ import {
 
 import {
   COLORS,
+  ICON_LABELS,
   ICON_NAMES,
   formatEventDate,
   formatDateTime,
@@ -75,6 +76,7 @@ const SECTIONS = new Set([
   "schichten",
   "gruppen",
   "bedarf",
+  "protokoll",
   "export",
   "sicherung",
   "passwort",
@@ -86,8 +88,112 @@ const DATA_PATHS = ["groups", "shifts", "stands", "demand", "assignments"];
 const CONFIG_FILE_FORMAT = "helferplan-config";
 const CONFIG_FILE_VERSION = 1;
 const MAX_CONFIG_FILE_BYTES = 5 * 1024 * 1024;
+const LOG_PAGE_SIZE = 50;
 const UNSAFE_DATABASE_KEY = /[.#$\[\]\/\u0000-\u001F\u007F]/;
 const RESERVED_DATABASE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+
+const LOG_ACTION_META = {
+  create: { label: "Angelegt", tone: "emerald", icon: "plus", past: "angelegt" },
+  update: { label: "Geändert", tone: "sky", icon: "pencil", past: "geändert" },
+  delete: { label: "Gelöscht", tone: "rose", icon: "trash", past: "gelöscht" },
+  reset: { label: "Zurückgesetzt", tone: "amber", icon: "refresh", past: "zurückgesetzt" }
+};
+
+const LOG_ENTITY_META = {
+  assignment: { label: "Helfer-Eintrag", plural: "Helfer-Einträge" },
+  stand: { label: "Stand", plural: "Stände" },
+  shift: { label: "Schicht", plural: "Schichten" },
+  group: { label: "Gruppe", plural: "Gruppen" },
+  demand: { label: "Bedarf", plural: "Bedarf" },
+  config: { label: "Konfiguration", plural: "Konfiguration" }
+};
+
+const LOG_ACTOR_META = {
+  admin: { label: "Admin", tone: "indigo" },
+  helper: { label: "Helfer", tone: "slate" }
+};
+
+const LOG_SOURCE_LABELS = {
+  ui: "Oberfläche",
+  import: "Import",
+  system: "System"
+};
+
+const LOG_CONFIG_EVENTS = {
+  event: "Veranstaltungsdaten",
+  adminHash: "Admin-Passwort",
+  assignments: "Helfer-Einträge",
+  configuration: "Konfiguration",
+  integrity_check: "Datenbereinigung",
+  import_configuration: "Konfigurationsimport"
+};
+
+const LOG_FIELD_DEFINITIONS = {
+  stand: [
+    ["name", "Name"],
+    ["icon", "Icon"],
+    ["color", "Farbe"],
+    ["groupId", "Gruppe"],
+    ["order", "Reihenfolge"]
+  ],
+  shift: [
+    ["name", "Name"],
+    ["start", "Startzeit"],
+    ["end", "Endzeit"],
+    ["order", "Reihenfolge"]
+  ],
+  group: [
+    ["name", "Name"],
+    ["color", "Farbe"],
+    ["order", "Reihenfolge"]
+  ],
+  assignment: [["name", "Name"]],
+  demand: [["demand", "Bedarf"]],
+  event: [
+    ["clubName", "Vereinsname"],
+    ["eventName", "Veranstaltungsname"],
+    ["eventDate", "Datum"],
+    ["eventLocation", "Ort"],
+    ["tagline", "Tagline"]
+  ],
+  import_configuration: [
+    ["stands", "Stände"],
+    ["shifts", "Schichten"],
+    ["groups", "Gruppen"]
+  ],
+  integrity_check: [
+    ["assignments", "Bereinigte Helfer-Einträge"],
+    ["demand", "Bereinigte Bedarfseinträge"],
+    ["groupRefs", "Bereinigte Gruppenverweise"]
+  ]
+};
+
+const logTimeFormatter = new Intl.DateTimeFormat("de-DE", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Berlin"
+});
+
+const logDayFormatter = new Intl.DateTimeFormat("de-DE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Europe/Berlin"
+});
+
+const logDateKeyFormatter = new Intl.DateTimeFormat("sv-SE", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: "Europe/Berlin"
+});
+
+const logDetailFormatter = new Intl.DateTimeFormat("de-DE", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Europe/Berlin"
+});
 
 const state = {
   config: {},
@@ -100,6 +206,21 @@ const state = {
   stands: {},
   demand: {},
   assignments: {},
+  audit_log: {},
+  logsLoaded: false,
+  logsError: "",
+  logFilters: {
+    search: "",
+    action: "",
+    entity: "",
+    actor: "",
+    shiftId: "",
+    standId: "",
+    dateFrom: "",
+    dateTo: ""
+  },
+  logVisibleCount: LOG_PAGE_SIZE,
+  logSearchTimer: null,
   loaded: new Set(),
   dataUnsubs: new Map(),
   configUnsub: null,
@@ -321,6 +442,770 @@ async function writeAudit({
 }
 
 /* --------------------------------------------------------------------------
+   Protokoll: Aufbereitung, Filter und Darstellung
+   -------------------------------------------------------------------------- */
+
+function logObjectName(value) {
+  return isObject(value) && typeof value.name === "string" ? value.name.trim() : "";
+}
+
+function logPathParts(entry) {
+  return String(entry?.entityId ?? "").split("/");
+}
+
+function logEntryShiftId(entry) {
+  if (entry?.shiftId) return String(entry.shiftId);
+  if (entry?.entity === "shift") return String(entry.entityId ?? "");
+  if (entry?.entity === "assignment" || entry?.entity === "demand") {
+    return String(logPathParts(entry)[0] ?? "");
+  }
+  return "";
+}
+
+function logEntryStandId(entry) {
+  if (entry?.standId) return String(entry.standId);
+  if (entry?.entity === "stand") return String(entry.entityId ?? "");
+  if (entry?.entity === "assignment" || entry?.entity === "demand") {
+    return String(logPathParts(entry)[1] ?? "");
+  }
+  return "";
+}
+
+function logEntrySlotIndex(entry) {
+  const direct = Number(entry?.slotIndex);
+  if (Number.isInteger(direct) && direct >= 0) return direct;
+  if (entry?.entity !== "assignment") return null;
+  const parsed = Number(logPathParts(entry)[2]);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function buildLogNameHistory(entity) {
+  const history = new Map();
+
+  for (const entry of Object.values(state.audit_log ?? {})) {
+    if (!isObject(entry) || entry.entity !== entity) continue;
+    const id = String(entry.entityId ?? "");
+    const ts = numberOr(entry.ts, 0);
+    if (!id) continue;
+
+    const points = history.get(id) ?? [];
+    const oldName = logObjectName(entry.oldValue);
+    const newName = logObjectName(entry.newValue);
+    if (oldName) points.push({ ts: ts - 1, name: oldName });
+    if (newName) points.push({ ts, name: newName });
+    history.set(id, points);
+  }
+
+  for (const points of history.values()) {
+    points.sort((a, b) => a.ts - b.ts);
+  }
+
+  return history;
+}
+
+function logNameAt(history, id, ts, fallback = "") {
+  const key = String(id ?? "");
+  if (!key) return fallback;
+  const points = history.get(key) ?? [];
+  let name = "";
+  for (const point of points) {
+    if (point.ts > ts) break;
+    name = point.name;
+  }
+  // Vor dem ersten bekannten Namenspunkt gilt der älteste bekannte Name –
+  // insbesondere bei gelöschten Einträgen besser als der aktuelle Name.
+  return name || points[0]?.name || fallback;
+}
+
+function buildLogSelectOptions(collection, history, includeDeleted = true) {
+  const options = new Map();
+
+  for (const [id, item] of Object.entries(collection ?? {})) {
+    options.set(String(id), {
+      value: String(id),
+      label: String(item?.name ?? "Ohne Namen"),
+      order: numberOr(item?.order, 0),
+      current: true
+    });
+  }
+
+  if (includeDeleted) {
+    for (const [id, points] of history) {
+      if (options.has(id) || points.length === 0) continue;
+      options.set(id, {
+        value: id,
+        label: `${points[points.length - 1].name} (gelöscht)`,
+        order: Number.MAX_SAFE_INTEGER,
+        current: false
+      });
+    }
+  }
+
+  return [...options.values()].sort((a, b) => {
+    if (a.current !== b.current) return a.current ? -1 : 1;
+    if (a.current && a.order !== b.order) return a.order - b.order;
+    return a.label.localeCompare(b.label, "de");
+  });
+}
+
+function setLogSelectOptions(select, options, allLabel, currentValue) {
+  if (!select) return;
+  const signature = `${allLabel}|${options.map((option) => `${option.value}:${option.label}`).join("|")}`;
+  if (select.dataset.optionsSignature !== signature) {
+    clearElement(select);
+    const all = createEl("option", "", allLabel);
+    all.value = "";
+    select.append(all);
+    for (const option of options) {
+      const element = createEl("option", "", option.label);
+      element.value = option.value;
+      select.append(element);
+    }
+    select.dataset.optionsSignature = signature;
+  }
+
+  const available = new Set(options.map((option) => option.value));
+  select.value = currentValue && (currentValue === "" || available.has(currentValue)) ? currentValue : "";
+}
+
+function updateLogFilterOptions(history) {
+  setLogSelectOptions(
+    $("log-shift-filter"),
+    buildLogSelectOptions(state.shifts, history.shift, state.loaded.has("shifts")),
+    "Alle Schichten",
+    state.logFilters.shiftId
+  );
+  setLogSelectOptions(
+    $("log-stand-filter"),
+    buildLogSelectOptions(state.stands, history.stand, state.loaded.has("stands")),
+    "Alle Stände",
+    state.logFilters.standId
+  );
+
+  state.logFilters.shiftId = $("log-shift-filter")?.value ?? "";
+  state.logFilters.standId = $("log-stand-filter")?.value ?? "";
+}
+
+function logConfigEventLabel(entry) {
+  const id = String(entry?.entityId ?? "");
+  return LOG_CONFIG_EVENTS[id] ?? "";
+}
+
+function logDefinitionFor(entry) {
+  if (entry?.entity === "config") {
+    const id = String(entry.entityId ?? "");
+    if (LOG_FIELD_DEFINITIONS[id]) return LOG_FIELD_DEFINITIONS[id];
+    return [];
+  }
+  return LOG_FIELD_DEFINITIONS[entry?.entity] ?? [];
+}
+
+function logValuesEqual(first, second) {
+  if (first === second) return true;
+  if (first == null && second == null) return true;
+  try {
+    return JSON.stringify(first) === JSON.stringify(second);
+  } catch {
+    return false;
+  }
+}
+
+function humanizeLogValue(value) {
+  if (value === null || value === undefined || value === "") return "–";
+  if (typeof value === "boolean") return value ? "Ja" : "Nein";
+  if (Array.isArray(value)) return value.map((item) => humanizeLogValue(item)).join(", ");
+  if (isObject(value)) {
+    return Object.entries(value)
+      .map(([key, item]) => `${humanizeLogKey(key)}: ${humanizeLogValue(item)}`)
+      .join(" · ");
+  }
+  return String(value);
+}
+
+function humanizeLogKey(key) {
+  const text = String(key ?? "")
+    .replace(/([a-zäöüß])([A-ZÄÖÜ])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  return text ? text[0].toLocaleUpperCase("de") + text.slice(1) : "Wert";
+}
+
+function formatLogValue(field, value, history, ts) {
+  if (field === "groupId") {
+    if (!value) return "Ohne Gruppe";
+    const name = logNameAt(history.group, value, ts, state.groups?.[value]?.name ?? "");
+    return name || "Gelöschte Gruppe";
+  }
+  if (value === null || value === undefined || value === "") return "–";
+  if (field === "color") return COLORS[value]?.label ?? String(value);
+  if (field === "icon") return ICON_LABELS[value] ?? String(value);
+  if (field === "order") {
+    const number = Number(value);
+    return Number.isFinite(number) ? String(number + 1) : String(value);
+  }
+  if (field === "eventDate") {
+    const formatted = formatEventDate(value, { withWeekday: false });
+    return formatted || String(value);
+  }
+  if (field === "start" || field === "end") return `${value} Uhr`;
+  if (field === "demand") {
+    const number = Number(value);
+    return Number.isFinite(number) ? `${number} Helfer` : String(value);
+  }
+  return humanizeLogValue(value);
+}
+
+function buildLogChangeRows(entry, history, ts) {
+  const definitions = logDefinitionFor(entry);
+  const oldValue = isObject(entry.oldValue) ? entry.oldValue : {};
+  const newValue = isObject(entry.newValue) ? entry.newValue : {};
+  const hasOldObject = isObject(entry.oldValue);
+  const hasNewObject = isObject(entry.newValue);
+  const compareBoth = entry.action === "update" && hasOldObject && hasNewObject;
+  const rows = [];
+  const seen = new Set();
+
+  const addRow = (field, label) => {
+    seen.add(field);
+    const hasOld = compareBoth || Object.prototype.hasOwnProperty.call(oldValue, field);
+    const hasNew = compareBoth || Object.prototype.hasOwnProperty.call(newValue, field);
+    if (!hasOld && !hasNew) return;
+
+    const oldRaw = hasOld ? oldValue[field] ?? null : null;
+    const newRaw = hasNew ? newValue[field] ?? null : null;
+    if (compareBoth && logValuesEqual(oldRaw, newRaw)) return;
+
+    rows.push({
+      label,
+      from: hasOld ? formatLogValue(field, oldRaw, history, ts) : null,
+      to: hasNew ? formatLogValue(field, newRaw, history, ts) : null
+    });
+  };
+
+  for (const [field, label] of definitions) {
+    addRow(field, label);
+  }
+
+  // Unbekannte Felder verständlich mit ausgeben, statt sie stillschweigend zu verlieren.
+  const extraKeys = new Set([
+    ...Object.keys(oldValue),
+    ...Object.keys(newValue)
+  ]);
+  for (const key of extraKeys) {
+    if (seen.has(key) || key === "createdAt" || key === "updatedAt") continue;
+    addRow(key, humanizeLogKey(key));
+  }
+
+  return rows;
+}
+
+function summarizeLogRows(rows) {
+  if (rows.length === 0) return "";
+  const labels = rows.map((row) => row.label);
+  const visible = labels.slice(0, 3).join(", ");
+  return labels.length > 3 ? `${visible} und ${labels.length - 3} weitere` : visible;
+}
+
+function buildLogEntryView(entry, history, ts) {
+  const actionMeta = LOG_ACTION_META[entry.action] ?? {
+    label: String(entry.action ?? "Ereignis"),
+    tone: "slate",
+    icon: "info",
+    past: "protokolliert"
+  };
+  const entityMeta = LOG_ENTITY_META[entry.entity] ?? {
+    label: "Ereignis",
+    plural: "Ereignisse"
+  };
+  const actorMeta = LOG_ACTOR_META[entry.actor] ?? { label: String(entry.actor ?? "Unbekannt"), tone: "slate" };
+  const shiftId = logEntryShiftId(entry);
+  const standId = logEntryStandId(entry);
+  const slotIndex = logEntrySlotIndex(entry);
+  const shiftName = shiftId
+    ? logNameAt(history.shift, shiftId, ts, state.shifts?.[shiftId]?.name ?? "")
+    : "";
+  const standName = standId
+    ? logNameAt(history.stand, standId, ts, state.stands?.[standId]?.name ?? "")
+    : "";
+  const shiftDeleted = Boolean(shiftId && state.loaded.has("shifts") && !state.shifts?.[shiftId]);
+  const standDeleted = Boolean(standId && state.loaded.has("stands") && !state.stands?.[standId]);
+  const shiftLabel = shiftName ? `${shiftName}${shiftDeleted ? " (gelöscht)" : ""}` : "";
+  const standLabel = standName ? `${standName}${standDeleted ? " (gelöscht)" : ""}` : "";
+  const oldValue = isObject(entry.oldValue) ? entry.oldValue : {};
+  const newValue = isObject(entry.newValue) ? entry.newValue : {};
+  const oldName = logObjectName(entry.oldValue);
+  const newName = logObjectName(entry.newValue);
+  const rows = buildLogChangeRows(entry, history, ts);
+  const changedLabels = summarizeLogRows(rows);
+
+  let title = "Protokoll-Eintrag";
+  let context = "";
+  let note = "";
+  let includeLocation = false;
+
+  if (entry.entity === "assignment") {
+    includeLocation = true;
+    if (entry.action === "create") {
+      title = newName ? `„${newName}“ eingetragen` : "Helfer-Eintrag angelegt";
+    } else if (entry.action === "delete") {
+      title = oldName ? `„${oldName}“ entfernt` : "Helfer-Eintrag entfernt";
+    } else if (newName) {
+      title = `„${newName}“ geändert`;
+    } else {
+      title = "Helfer-Eintrag geändert";
+    }
+  } else if (entry.entity === "stand") {
+    const name = newName || oldName || standName || "Unbekannter Stand";
+    title = `Stand „${name}“ ${actionMeta.past}`;
+    const groupId = newValue.groupId ?? oldValue.groupId ?? "";
+    const groupName = groupId
+      ? logNameAt(history.group, groupId, ts, state.groups?.[groupId]?.name ?? "") || "Gelöschte Gruppe"
+      : "";
+    if (entry.action === "update" && changedLabels) {
+      context = `Geändert: ${changedLabels}`;
+    } else if (groupName) {
+      context = `Gruppe: ${groupName}`;
+    } else {
+      context = "Ohne Gruppe";
+    }
+  } else if (entry.entity === "shift") {
+    const name = newName || oldName || shiftName || "Unbekannte Schicht";
+    title = `Schicht „${name}“ ${actionMeta.past}`;
+    const start = newValue.start ?? oldValue.start ?? "";
+    const end = newValue.end ?? oldValue.end ?? "";
+    const times = formatTimeRange(start, end) || "Ohne Uhrzeit";
+    context =
+      entry.action === "update" && changedLabels
+        ? `${times} · Geändert: ${changedLabels}`
+        : times;
+  } else if (entry.entity === "group") {
+    const name = newName || oldName || "Unbekannte Gruppe";
+    title = `Gruppe „${name}“ ${actionMeta.past}`;
+    const color = newValue.color ?? oldValue.color ?? "";
+    if (entry.action === "update" && changedLabels) {
+      context = `Geändert: ${changedLabels}`;
+    } else if (color) {
+      context = `Farbe: ${COLORS[color]?.label ?? color}`;
+    }
+  } else if (entry.entity === "demand") {
+    const oldDemand = oldValue.demand == null ? NaN : Number(oldValue.demand);
+    const newDemand = newValue.demand == null ? NaN : Number(newValue.demand);
+    title = `Bedarf für „${standLabel || "Unbekannten Stand"}“ ${actionMeta.past}`;
+    const demandText =
+      Number.isFinite(oldDemand) && Number.isFinite(newDemand)
+        ? `${oldDemand} → ${newDemand} Helfer`
+        : changedLabels || "Bedarf angepasst";
+    context = [shiftLabel || "Unbekannte Schicht", demandText].filter(Boolean).join(" · ");
+  } else if (entry.entity === "config") {
+    const eventId = String(entry.entityId ?? "");
+    if (eventId === "event") {
+      title = `Veranstaltungsdaten ${actionMeta.past}`;
+      context = changedLabels ? `Geändert: ${changedLabels}` : "";
+    } else if (eventId === "adminHash") {
+      title = "Admin-Passwort geändert";
+      context = "Passwortdaten werden nicht protokolliert";
+      note = "Aus Sicherheitsgründen enthält der Eintrag weder alten noch neuen Hash oder Salt.";
+    } else if (eventId === "assignments") {
+      title = "Helfer-Einträge zurückgesetzt";
+      context = "Alle Helfer-Einträge wurden gelöscht";
+      note = "Die Konfiguration mit Ständen, Schichten, Gruppen und Bedarf blieb erhalten.";
+    } else if (eventId === "configuration") {
+      title = "Konfiguration zurückgesetzt";
+      context = "Stände, Schichten, Gruppen, Bedarf und Helfer-Einträge wurden gelöscht";
+      note = "Veranstaltungsdaten, Admin-Passwort und Protokoll blieben erhalten.";
+    } else if (eventId === "integrity_check") {
+      const removed = ["assignments", "demand", "groupRefs"].reduce(
+        (sum, key) => sum + numberOr(oldValue[key], 0),
+        0
+      );
+      title = "Datenbereinigung ausgeführt";
+      context = `${removed} ${removed === 1 ? "ungültiger Eintrag wurde" : "ungültige Einträge wurden"} entfernt`;
+      note = "Ungültige oder verwaiste Verweise wurden aus den Event-Daten entfernt.";
+    } else if (eventId === "import_configuration") {
+      title = "Konfiguration importiert";
+      const counts = [
+        newValue.stands !== undefined ? `${newValue.stands} Stände` : "",
+        newValue.shifts !== undefined ? `${newValue.shifts} Schichten` : "",
+        newValue.groups !== undefined ? `${newValue.groups} Gruppen` : ""
+      ].filter(Boolean);
+      context = counts.join(" · ") || "Konfigurationsdatei übernommen";
+      note = "Helfer-Einträge blieben erhalten, sofern sie zur neuen Konfiguration passten.";
+    } else {
+      title = `Konfiguration ${actionMeta.past}`;
+      context = changedLabels ? `Geändert: ${changedLabels}` : logConfigEventLabel(entry);
+    }
+  }
+
+  if (includeLocation) {
+    const location = [
+      standLabel || "Unbekannter Stand",
+      shiftLabel || "Unbekannte Schicht",
+      slotIndex !== null ? `Platz ${slotIndex + 1}` : ""
+    ].filter(Boolean);
+    context = [location.join(" · "), context].filter(Boolean).join(" · ");
+  }
+
+  if (rows.length === 0 && !note && (isObject(entry.oldValue) || isObject(entry.newValue))) {
+    note = "Es wurden keine inhaltlichen Änderungen gespeichert.";
+  }
+
+  const haystack = [
+    title,
+    context,
+    note,
+    actionMeta.label,
+    entityMeta.label,
+    actorMeta.label,
+    LOG_SOURCE_LABELS[entry.source] ?? "",
+    ...rows.map((row) => `${row.label} ${row.from ?? ""} ${row.to ?? ""}`)
+  ]
+    .join(" ")
+    .toLocaleLowerCase("de");
+
+  return {
+    ts,
+    action: String(entry.action ?? ""),
+    entity: String(entry.entity ?? ""),
+    actor: String(entry.actor ?? ""),
+    actionMeta,
+    entityMeta,
+    actorMeta,
+    actorLabel: actorMeta.label,
+    sourceLabel: LOG_SOURCE_LABELS[entry.source] ?? "",
+    shiftId,
+    standId,
+    slotIndex,
+    title,
+    context,
+    note,
+    rows,
+    haystack
+  };
+}
+
+function logDateKey(ts) {
+  return logDateKeyFormatter.format(new Date(ts));
+}
+
+function previousLogDateKey(dateKey) {
+  const [year, month, day] = String(dateKey).split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function prepareLogEntries() {
+  const history = {
+    shift: buildLogNameHistory("shift"),
+    stand: buildLogNameHistory("stand"),
+    group: buildLogNameHistory("group")
+  };
+
+  const entries = Object.entries(state.audit_log ?? {})
+    .map(([id, entry]) => ({ id, entry: isObject(entry) ? entry : null }))
+    .filter(({ entry }) => {
+      if (!entry) return false;
+      const ts = Number(entry.ts);
+      return Number.isFinite(ts) && ts > 0 && !Number.isNaN(new Date(ts).getTime());
+    })
+    .sort((a, b) => Number(b.entry.ts) - Number(a.entry.ts) || String(b.id).localeCompare(String(a.id), "de"))
+    .map(({ id, entry }) => {
+      const ts = numberOr(entry.ts, 0);
+      return {
+        id,
+        ts,
+        dateKey: logDateKey(ts),
+        view: buildLogEntryView(entry, history, ts)
+      };
+    });
+
+  return { history, entries };
+}
+
+function logFiltersActive() {
+  return Object.values(state.logFilters).some((value) => String(value ?? "").trim() !== "");
+}
+
+function filterLogEntries(entries) {
+  const filters = state.logFilters;
+  const search = String(filters.search ?? "").trim().toLocaleLowerCase("de");
+  const from = String(filters.dateFrom ?? "");
+  const to = String(filters.dateTo ?? "");
+  const invalidRange = Boolean(from && to && from > to);
+
+  const filtered = entries.filter((item) => {
+    if (filters.action && item.view.action !== filters.action) return false;
+    if (filters.entity && item.view.entity !== filters.entity) return false;
+    if (filters.actor && item.view.actor !== filters.actor) return false;
+    if (filters.shiftId && item.view.shiftId !== filters.shiftId) return false;
+    if (filters.standId && item.view.standId !== filters.standId) return false;
+    if (from && item.dateKey < from) return false;
+    if (to && item.dateKey > to) return false;
+    if (search && !item.view.haystack.includes(search)) return false;
+    return true;
+  });
+
+  return { filtered, invalidRange };
+}
+
+function logDayLabel(dateKey, sampleTs) {
+  const todayKey = logDateKey(Date.now());
+  const yesterdayKey = previousLogDateKey(todayKey);
+  if (dateKey === todayKey) return "Heute";
+  if (dateKey === yesterdayKey) return "Gestern";
+  return logDayFormatter.format(new Date(sampleTs));
+}
+
+function buildLogDetails(view) {
+  const body = createEl("div", "log-entry-details");
+
+  if (view.rows.length > 0) {
+    const list = createEl("dl", "log-changes");
+    for (const row of view.rows) {
+      const item = createEl("div", "log-change");
+      item.append(createEl("dt", "", row.label));
+      const value = createEl("dd");
+
+      if (row.from !== null && row.to !== null) {
+        value.append(createEl("span", "log-change-old", row.from));
+        const arrow = createEl("span", "log-change-arrow", "→");
+        arrow.setAttribute("aria-hidden", "true");
+        value.append(arrow);
+        value.append(createEl("span", "sr-only", " wird zu "));
+        value.append(createEl("span", "log-change-new", row.to));
+      } else if (row.to !== null) {
+        value.append(createEl("span", "log-change-tag", "neu"));
+        value.append(createEl("span", "log-change-new", row.to));
+      } else if (row.from !== null) {
+        value.append(createEl("span", "log-change-tag", "vorher"));
+        value.append(createEl("span", "log-change-old", row.from));
+      }
+
+      item.append(value);
+      list.append(item);
+    }
+    body.append(list);
+  }
+
+  if (view.note) {
+    body.append(createEl("p", "log-entry-note", view.note));
+  }
+
+  const meta = [`Erfasst: ${logDetailFormatter.format(new Date(view.ts))}`];
+  if (view.sourceLabel) meta.push(`Quelle: ${view.sourceLabel}`);
+  if (view.entityMeta?.label) meta.push(`Bereich: ${view.entityMeta.label}`);
+  body.append(createEl("p", "log-entry-detail-meta", meta.join(" · ")));
+
+  return body;
+}
+
+function createLogEntry(view) {
+  const item = createEl("li", "log-item");
+  const details = createEl("details", "log-entry");
+  const summary = createEl("summary", "log-entry-summary");
+
+  const timestamp = new Date(view.ts);
+  const validTime = !Number.isNaN(timestamp.getTime());
+  const time = createEl("time", "log-entry-time", validTime ? logTimeFormatter.format(timestamp) : "–");
+  if (validTime) time.dateTime = timestamp.toISOString();
+
+  const iconBox = createEl("span", "log-entry-icon");
+  applyTone(iconBox, view.actionMeta.tone);
+  iconBox.append(uiIcon(view.actionMeta.icon, "icon icon-sm"));
+
+  const main = createEl("div", "log-entry-main");
+  main.append(createEl("p", "log-entry-title", view.title));
+  if (view.context) main.append(createEl("p", "log-entry-context", view.context));
+
+  const badges = createEl("span", "log-entry-badges");
+  const actionBadge = createEl("span", "log-badge", view.actionMeta.label);
+  applyTone(actionBadge, view.actionMeta.tone);
+  const actorBadge = createEl("span", "log-badge log-badge--muted", view.actorLabel);
+  badges.append(actionBadge, actorBadge);
+  if (view.sourceLabel && view.sourceLabel !== LOG_SOURCE_LABELS.ui) {
+    badges.append(createEl("span", "log-badge log-badge--muted", view.sourceLabel));
+  }
+
+  const chevron = createEl("span", "log-entry-chevron");
+  chevron.append(uiIcon("chevron", "icon icon-xs"));
+
+  summary.append(time, iconBox, main, badges, chevron);
+  details.append(summary, buildLogDetails(view));
+  item.append(details);
+  return item;
+}
+
+function renderLogList(entries) {
+  const list = $("log-list");
+  if (!list) return;
+  clearElement(list);
+
+  const days = new Map();
+  for (const entry of entries) {
+    const day = days.get(entry.dateKey) ?? { key: entry.dateKey, sampleTs: entry.ts, entries: [] };
+    day.entries.push(entry);
+    days.set(entry.dateKey, day);
+  }
+
+  for (const day of days.values()) {
+    const section = createEl("section", "log-day");
+    const heading = createEl("h3", "log-day-title");
+    heading.id = `log-day-${day.key}`;
+    heading.append(document.createTextNode(logDayLabel(day.key, day.sampleTs)));
+    heading.append(createEl("span", "log-day-count", String(day.entries.length)));
+    section.setAttribute("aria-labelledby", heading.id);
+
+    const items = createEl("ol", "log-entry-list");
+    for (const entry of day.entries) {
+      items.append(createLogEntry(entry.view));
+    }
+
+    section.append(heading, items);
+    list.append(section);
+  }
+}
+
+function setControlValue(id, value) {
+  const control = $(id);
+  if (!control) return;
+  const next = String(value ?? "");
+  if (control.value !== next) control.value = next;
+}
+
+function renderLogsSection() {
+  const errorBox = $("log-load-error");
+  const errorText = $("log-load-error-text");
+  if (errorBox) errorBox.hidden = !state.logsError;
+  if (errorText) errorText.textContent = state.logsError;
+
+  const live = $("log-live");
+  const liveLabel = $("log-live-label");
+  if (live && liveLabel) {
+    const offline = Boolean(state.logsError);
+    live.classList.toggle("log-live--offline", offline);
+    live.setAttribute(
+      "aria-label",
+      offline ? "Echtzeit-Aktualisierung nicht verfügbar" : "Echtzeit-Aktualisierung aktiv"
+    );
+    liveLabel.textContent = offline ? "Getrennt" : "Live";
+  }
+
+  const { history, entries } = prepareLogEntries();
+  updateLogFilterOptions(history);
+
+  const filters = state.logFilters;
+  setControlValue("log-action-filter", filters.action);
+  setControlValue("log-entity-filter", filters.entity);
+  setControlValue("log-actor-filter", filters.actor);
+  setControlValue("log-date-from", filters.dateFrom);
+  setControlValue("log-date-to", filters.dateTo);
+
+  const { filtered, invalidRange } = filterLogEntries(entries);
+  const active = logFiltersActive();
+  const reset = $("log-filter-reset");
+  if (reset) reset.disabled = !active;
+
+  const visible = filtered.slice(0, state.logVisibleCount);
+  renderLogList(visible);
+
+  const total = entries.length;
+  const todayKey = logDateKey(Date.now());
+  const todayCount = entries.filter((entry) => entry.dateKey === todayKey).length;
+  const overview = $("log-overview");
+  if (overview) {
+    if (state.logsError) {
+      overview.textContent = total > 0 ? "Protokoll nicht aktuell." : "Protokoll nicht verfügbar.";
+    } else if (!state.logsLoaded) {
+      overview.textContent = "Protokoll wird geladen …";
+    } else if (total === 0) {
+      overview.textContent = "Noch keine Änderungen protokolliert.";
+    } else {
+      overview.textContent = `${total} ${total === 1 ? "Eintrag" : "Einträge"} insgesamt · ${todayCount} heute`;
+    }
+  }
+
+  const count = $("log-result-count");
+  if (count) {
+    if (state.logsError) {
+      count.textContent =
+        total > 0
+          ? `${total} ${total === 1 ? "zuletzt geladener Eintrag" : "zuletzt geladene Einträge"} – keine Live-Aktualisierung.`
+          : "Keine Protokolldaten verfügbar.";
+    } else if (!state.logsLoaded) {
+      count.textContent = "Protokoll wird geladen …";
+    } else if (invalidRange) {
+      count.textContent = "Der gewählte Zeitraum ist ungültig: „Von“ liegt nach „Bis“.";
+    } else if (total === 0) {
+      count.textContent = "Noch keine Einträge vorhanden.";
+    } else if (active) {
+      const suffix =
+        visible.length < filtered.length
+          ? ` Es werden die neuesten ${visible.length} angezeigt.`
+          : "";
+      count.textContent = `${filtered.length} von ${total} Einträgen entsprechen den Filtern.${suffix}`;
+    } else {
+      const suffix =
+        visible.length < filtered.length
+          ? ` Es werden die neuesten ${visible.length} angezeigt.`
+          : "";
+      count.textContent = `${total} ${total === 1 ? "Eintrag" : "Einträge"}, neueste zuerst.${suffix}`;
+    }
+  }
+
+  const empty = $("log-empty");
+  const emptyText = $("log-empty-text");
+  if (empty && emptyText) {
+    let message = "";
+    if (!state.logsLoaded || state.logsError) {
+      message = "";
+    } else if (invalidRange) {
+      message = "Bitte wählen Sie einen gültigen Zeitraum: „Von“ darf nicht nach „Bis“ liegen.";
+    } else if (total === 0) {
+      message = "Sobald jemand einen Helfer-Eintrag oder die Konfiguration ändert, erscheint die Änderung hier.";
+    } else if (filtered.length === 0) {
+      message = "Keine Einträge passen zu den gewählten Filtern. Setzen Sie die Filter zurück, um wieder alle Änderungen zu sehen.";
+    }
+    emptyText.textContent = message;
+    empty.hidden = !message;
+  }
+
+  const moreWrap = $("log-more-wrap");
+  const moreButton = $("log-more");
+  if (moreWrap && moreButton) {
+    const remaining = Math.max(0, filtered.length - visible.length);
+    moreWrap.hidden = remaining === 0;
+    moreButton.textContent = `Weitere ${Math.min(LOG_PAGE_SIZE, remaining)} ${remaining === 1 ? "Eintrag" : "Einträge"} laden`;
+  }
+}
+
+function resetLogFilters() {
+  if (state.logSearchTimer) {
+    window.clearTimeout(state.logSearchTimer);
+    state.logSearchTimer = null;
+  }
+  state.logFilters = {
+    search: "",
+    action: "",
+    entity: "",
+    actor: "",
+    shiftId: "",
+    standId: "",
+    dateFrom: "",
+    dateTo: ""
+  };
+  state.logVisibleCount = LOG_PAGE_SIZE;
+  setControlValue("log-search", "");
+  setControlValue("log-action-filter", "");
+  setControlValue("log-entity-filter", "");
+  setControlValue("log-actor-filter", "");
+  setControlValue("log-shift-filter", "");
+  setControlValue("log-stand-filter", "");
+  setControlValue("log-date-from", "");
+  setControlValue("log-date-to", "");
+  renderLogsSection();
+}
+
+/* --------------------------------------------------------------------------
    Fehleranzeige
    -------------------------------------------------------------------------- */
 
@@ -524,6 +1409,25 @@ function startDataSubscriptions() {
     );
     state.dataUnsubs.set(path, unsubscribe);
   }
+
+  const unsubscribeLogs = onValue(
+    ref(db, "audit_log"),
+    (snapshot) => {
+      const value = snapshot.val();
+      state.audit_log = isObject(value) ? value : {};
+      state.logsLoaded = true;
+      state.logsError = "";
+      if (state.section === "protokoll") scheduleRender();
+    },
+    (error) => {
+      console.error("Protokoll konnte nicht gelesen werden.", error);
+      state.logsLoaded = true;
+      state.logsError =
+        "Das Protokoll konnte nicht geladen werden. Prüfen Sie die Verbindung und veröffentlichen Sie die aktualisierten Datenbankregeln.";
+      if (state.section === "protokoll") scheduleRender();
+    }
+  );
+  state.dataUnsubs.set("audit_log", unsubscribeLogs);
 }
 
 function stopDataSubscriptions() {
@@ -541,6 +1445,10 @@ function stopDataSubscriptions() {
   state.stands = {};
   state.demand = {};
   state.assignments = {};
+  state.audit_log = {};
+  state.logsLoaded = false;
+  state.logsError = "";
+  state.logVisibleCount = LOG_PAGE_SIZE;
   state.loaded.clear();
   state.demandDraft = {};
   state.demandDirty = false;
@@ -635,6 +1543,7 @@ function sectionTitle(name) {
     schichten: "Schichten",
     gruppen: "Gruppen",
     bedarf: "Bedarf",
+    protokoll: "Protokoll",
     export: "Drucken",
     sicherung: "Sicherung",
     passwort: "Passwort ändern",
@@ -674,6 +1583,9 @@ function activateSection(name, { focus = true, updateHash = true } = {}) {
   } else if (section === "bedarf") {
     syncDemandDraft();
     renderDemand();
+  } else if (section === "protokoll") {
+    state.logFilters.search = $("log-search")?.value ?? state.logFilters.search;
+    renderLogsSection();
   } else if (section === "export") {
     renderExportSummary();
   } else if (section === "sicherung") {
@@ -3757,6 +4669,7 @@ function renderAll() {
   renderShifts();
   renderGroups();
   renderDemand();
+  if (state.section === "protokoll") renderLogsSection();
   renderExportSummary();
   renderConfigExportSummary();
   renderConfigImportState();
@@ -3915,6 +4828,50 @@ function bindEvents() {
   $("demand-content")?.addEventListener("input", handleDemandInput, { signal });
   $("demand-reset-all")?.addEventListener("click", resetDemandDraftToZero, { signal });
   $("demand-save")?.addEventListener("click", handleDemandSave, { signal });
+
+  for (const [id, key] of [
+    ["log-action-filter", "action"],
+    ["log-entity-filter", "entity"],
+    ["log-actor-filter", "actor"],
+    ["log-shift-filter", "shiftId"],
+    ["log-stand-filter", "standId"],
+    ["log-date-from", "dateFrom"],
+    ["log-date-to", "dateTo"]
+  ]) {
+    $(id)?.addEventListener(
+      "change",
+      () => {
+        state.logFilters[key] = $(id)?.value ?? "";
+        state.logVisibleCount = LOG_PAGE_SIZE;
+        renderLogsSection();
+      },
+      { signal }
+    );
+  }
+
+  $("log-search")?.addEventListener(
+    "input",
+    () => {
+      if (state.logSearchTimer) window.clearTimeout(state.logSearchTimer);
+      state.logSearchTimer = window.setTimeout(() => {
+        state.logSearchTimer = null;
+        state.logFilters.search = $("log-search")?.value ?? "";
+        state.logVisibleCount = LOG_PAGE_SIZE;
+        renderLogsSection();
+      }, 180);
+    },
+    { signal }
+  );
+
+  $("log-filter-reset")?.addEventListener("click", resetLogFilters, { signal });
+  $("log-more")?.addEventListener(
+    "click",
+    () => {
+      state.logVisibleCount += LOG_PAGE_SIZE;
+      renderLogsSection();
+    },
+    { signal }
+  );
 
   $("run-integrity-check")?.addEventListener("click", runIntegrityCheck, { signal });
   $("pdf-button")?.addEventListener("click", exportHelferListPdf, { signal });
