@@ -1327,7 +1327,7 @@ async function submitEventForm(event) {
    Slot-Dialog
    -------------------------------------------------------------------------- */
 
-function openSlotDialog(shiftId, standId, slotIndex, opener) {
+async function openSlotDialog(shiftId, standId, slotIndex, opener) {
   if (state.pendingWrites.has(SLOT_KEY(shiftId, standId, slotIndex))) {
     showToast("Bitte warte einen Moment.", "info");
     return;
@@ -1342,6 +1342,17 @@ function openSlotDialog(shiftId, standId, slotIndex, opener) {
   }
 
   const assignment = getAssignment(shiftId, standId, slotIndex);
+
+  if (assignment) {
+    const confirmed = await confirmAction({
+      title: "Eintrag wirklich bearbeiten?",
+      message: `Der Eintrag von ${assignment.name} bei ${stand.name} in der ${shift.name} (Platz ${slotIndex + 1}) wird geändert.\n\nJede Änderung wird im Änderungsprotokoll gespeichert.`,
+      confirmLabel: "Bearbeiten",
+      cancelLabel: "Abbrechen"
+    });
+    if (!confirmed) return;
+  }
+
   const dialog = {
     shiftId,
     standId,

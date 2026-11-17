@@ -213,7 +213,7 @@ Die Helfer-Ansicht ist die öffentliche Startseite `index.html`. Sie ist nach De
 #### 4.5 Eintragen, Bearbeiten und Löschen
 
 * **FR-H-43 (MUSS):** Klick/Tipp auf einen freien Platz öffnet einen Dialog „Platz eintragen“ mit Kontext (Schicht, Stand, Platznummer) und einem Namensfeld.
-* **FR-H-44 (MUSS):** Klick/Tipp auf einen belegten Platz öffnet „Eintrag bearbeiten“ mit vorausgefülltem Namen, Speichern, Abbrechen und Löschen.
+* **FR-H-44 (MUSS):** Klick/Tipp auf einen belegten Platz zeigt zunächst eine Bestätigung mit dem Hinweis, dass Änderungen im Änderungsprotokoll gespeichert werden. Nach Bestätigung öffnet sich „Eintrag bearbeiten“ mit vorausgefülltem Namen, Speichern, Abbrechen und Löschen.
 * **FR-H-45 (MUSS):** Der Name wird getrimmt, interne mehrfache Leerzeichen werden zu einem Leerzeichen zusammengefasst. Gültig sind 2–60 Zeichen. Leerzeichen allein ist ungültig. Steuerzeichen und `<`/`>` werden abgelehnt.
 * **FR-H-46 (MUSS):** Der Speichern-Button ist deaktiviert, solange die Eingabe ungültig ist. Die Fehlermeldung erscheint direkt am Feld auf Deutsch.
 * **FR-H-47 (MUSS):** Speichern verwendet `runTransaction` mit optimistischer Konfliktprüfung: Beim Öffnen wird der erwartete aktuelle Wert festgehalten; beim Speichern wird abgebrochen, wenn sich der Platz inzwischen geändert hat.
