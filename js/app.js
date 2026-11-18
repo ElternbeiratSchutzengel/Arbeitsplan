@@ -1346,7 +1346,7 @@ async function openSlotDialog(shiftId, standId, slotIndex, opener) {
   if (assignment) {
     const confirmed = await confirmAction({
       title: "Eintrag wirklich bearbeiten?",
-      message: `Der Eintrag von ${assignment.name} bei ${stand.name} in der ${shift.name} (Platz ${slotIndex + 1}) wird geändert.\n\nJede Änderung wird im Änderungsprotokoll gespeichert.`,
+      message: "Jede Änderung an einem Eintrag wird im Änderungsprotokoll aufgezeichnet.",
       confirmLabel: "Bearbeiten",
       cancelLabel: "Abbrechen"
     });
