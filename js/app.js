@@ -64,7 +64,7 @@ const state = {
   connection: true,
   hasConnected: false,
   wasOffline: false,
-  filters: { stand: "", shift: "", group: "" },
+  filters: { stand: "", shift: "", group: "", open: false },
   pendingUrlFilters: null,
   filterSignature: "",
   openFilter: null,
@@ -138,6 +138,7 @@ function checkInitialLoad() {
 function bindStaticEvents() {
   qs("#filter-reset")?.addEventListener("click", resetFilters);
   qs("#empty-filter-reset")?.addEventListener("click", resetFilters);
+  qs("#filter-open-btn")?.addEventListener("click", toggleOpenFilter);
   qs("#error-retry")?.addEventListener("click", retryLoading);
   qs("#event-start-btn")?.addEventListener("click", openEventDialog);
   qs("#footer-privacy-link")?.addEventListener("click", () => {
@@ -510,7 +511,14 @@ function renderFilters() {
       labelForFilter("group", state.filters.group) || "Alle";
   }
 
-  const hasActive = Boolean(state.filters.stand || state.filters.shift || state.filters.group);
+  const openToggle = qs("#filter-open-btn");
+  if (openToggle) {
+    openToggle.setAttribute("aria-pressed", state.filters.open ? "true" : "false");
+  }
+
+  const hasActive = Boolean(
+    state.filters.stand || state.filters.shift || state.filters.group || state.filters.open
+  );
   const reset = qs("#filter-reset");
   if (reset) reset.disabled = !hasActive;
 
@@ -554,6 +562,13 @@ function labelForFilter(name, value) {
 
 function selectFilter(name, value) {
   state.filters[name] = value;
+  closeFilterMenus();
+  updateFiltersInUrl();
+  scheduleRender();
+}
+
+function toggleOpenFilter() {
+  state.filters.open = !state.filters.open;
   closeFilterMenus();
   updateFiltersInUrl();
   scheduleRender();
@@ -675,7 +690,7 @@ function handleFilterMenuKeydown(event, name) {
 }
 
 function resetFilters() {
-  state.filters = { stand: "", shift: "", group: "" };
+  state.filters = { stand: "", shift: "", group: "", open: false };
   closeFilterMenus();
   updateFiltersInUrl();
   scheduleRender();
@@ -688,10 +703,11 @@ function readFiltersFromUrl() {
     return {
       stand: params.get("stand") ?? "",
       shift: params.get("schicht") ?? "",
-      group: groupParam === "ohne" ? "__none__" : groupParam
+      group: groupParam === "ohne" ? "__none__" : groupParam,
+      open: params.get("offen") === "1"
     };
   } catch {
-    return { stand: "", shift: "", group: "" };
+    return { stand: "", shift: "", group: "", open: false };
   }
 }
 
@@ -699,7 +715,8 @@ function validateFilters(filters, active) {
   const next = {
     stand: active.activeStandIds.has(filters.stand) ? filters.stand : "",
     shift: active.activeShiftIds.has(filters.shift) ? filters.shift : "",
-    group: ""
+    group: "",
+    open: filters.open === true
   };
 
   if (
@@ -725,6 +742,8 @@ function updateFiltersInUrl() {
     if (state.filters.group === "__none__") url.searchParams.set("gruppe", "ohne");
     else if (state.filters.group) url.searchParams.set("gruppe", state.filters.group);
     else url.searchParams.delete("gruppe");
+    if (state.filters.open) url.searchParams.set("offen", "1");
+    else url.searchParams.delete("offen");
     window.history.replaceState(null, "", url);
   } catch {
     /* URL-Speicherung ist optional. */
@@ -766,8 +785,19 @@ function renderPlan() {
       return true;
     });
 
-    if (stands.length > 0) {
-      visibleShifts.push({ shiftId, shift, stands });
+    if (stands.length === 0) continue;
+
+    // „Freie Plätze“ blendet vollzählige Stände aus. Die Kennzahlen im
+    // Schichtkopf bleiben dabei auf alle Stände der übrigen Filter bezogen.
+    const visibleStands = state.filters.open
+      ? stands.filter(([, , demand, stand]) => {
+          const filled = countFilledSlots(shiftId, stand._id, demand, { report: false });
+          return filled < demand;
+        })
+      : stands;
+
+    if (visibleStands.length > 0) {
+      visibleShifts.push({ shiftId, shift, stands: visibleStands, statsStands: stands });
     }
   }
 
@@ -781,8 +811,8 @@ function renderPlan() {
   if (emptyState) emptyState.hidden = true;
   if (emptyFilterState) emptyFilterState.hidden = true;
 
-  for (const { shiftId, shift, stands } of visibleShifts) {
-    list.append(buildShiftCard(shiftId, shift, stands));
+  for (const { shiftId, shift, stands, statsStands } of visibleShifts) {
+    list.append(buildShiftCard(shiftId, shift, stands, statsStands));
   }
 
   const focusTargetKey = state.focusSlotKey || focusedSlot;
@@ -796,13 +826,13 @@ function renderPlan() {
   }
 }
 
-function buildShiftCard(shiftId, shift, stands) {
+function buildShiftCard(shiftId, shift, stands, statsStands = stands) {
   const card = createEl("section", "shift-card");
   card.setAttribute("aria-labelledby", `shift-title-${shiftId}`);
 
   let total = 0;
   let filled = 0;
-  for (const [, , demand, stand] of stands) {
+  for (const [, , demand, stand] of statsStands) {
     total += demand;
     filled += countFilledSlots(shiftId, stand._id, demand, { report: false });
   }

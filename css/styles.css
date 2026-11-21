@@ -539,6 +539,42 @@ svg {
   transform: rotate(180deg);
 }
 
+.filter-toggle {
+  flex: none;
+  gap: 8px;
+}
+
+.filter-toggle-box {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--slate-300);
+  border-radius: 4px;
+  background: #fff;
+  color: transparent;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.filter-toggle-box .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.filter-toggle[aria-pressed="true"] {
+  border-color: var(--sky-500);
+  background: var(--sky-50);
+  box-shadow: 0 0 0 1px var(--sky-500);
+  color: var(--sky-700);
+}
+
+.filter-toggle[aria-pressed="true"] .filter-toggle-box {
+  border-color: var(--sky-600);
+  background: var(--sky-600);
+  color: #fff;
+}
+
 .filter-menu {
   position: absolute;
   top: calc(100% + 4px);

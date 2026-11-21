@@ -171,7 +171,8 @@ Die Helfer-Ansicht ist die öffentliche Startseite `index.html`. Sie ist nach De
 
 #### 4.2 Filterleiste
 
-* **FR-H-11 (MUSS):** Unter dem Header befindet sich eine sticky Filterleiste mit den Filtern „Stand“, „Schicht“ und „Gruppe“.
+* **FR-H-11 (MUSS):** Unter dem Header befindet sich eine sticky Filterleiste mit den Filtern „Stand“, „Schicht“ und „Gruppe“ sowie dem Toggle „Freie Plätze“.
+* **FR-H-11a (MUSS):** Ist „Freie Plätze“ aktiv, werden innerhalb der Schichten ausschließlich Stände mit mindestens einem freien Platz angezeigt; vollzählige Stände werden ausgeblendet. Schichten ohne verbleibende Stände erscheinen nicht. Die Kennzahlen im Schichtkopf beziehen sich weiterhin auf alle Stände, die den übrigen Filtern entsprechen. Der Toggle signalisiert seinen Zustand über `aria-pressed`.
 * **FR-H-12 (MUSS):** Jeder Filter hat die Standardoption „Alle“ und zeigt die aktuell konfigurierten Werte.
 * **FR-H-13 (MUSS):** Die Filter werden mit UND kombiniert. Es werden nur Schichten und Stände angezeigt, die allen aktiven Filtern entsprechen.
 * **FR-H-14 (MUSS):** Der Gruppenfilter wird nur eingeblendet, wenn mindestens eine Gruppe existiert. Existieren Gruppen, enthält der Filter zusätzlich die Option „Ohne Gruppe“.
@@ -179,7 +180,7 @@ Die Helfer-Ansicht ist die öffentliche Startseite `index.html`. Sie ist nach De
 * **FR-H-16 (MUSS):** Die Filterleiste ist auf kleinen Bildschirmen horizontal scrollbar, ohne sichtbare Scrollbar. Alle Filter-Bedienelemente haben mindestens 44 px Höhe.
 * **FR-H-17 (MUSS):** Bei leerem Filterergebnis erscheint eine deutsche Meldung „Keine Einträge für diese Filter.“ mit einer Aktion „Filter zurücksetzen“.
 * **FR-H-18 (MUSS):** Die Filter beeinflussen ausschließlich die Liste der Schichten und Stände, nicht die globalen Kennzahlen im Header.
-* **FR-H-19 (SOLL):** Der Filterzustand wird in den URL-Query-Parametern gespeichert, damit ein gefilterter Plan geteilt oder neu geladen werden kann.
+* **FR-H-19 (SOLL):** Der Filterzustand (Stand, Schicht, Gruppe und „Freie Plätze“ als `offen=1`) wird in den URL-Query-Parametern gespeichert, damit ein gefilterter Plan geteilt oder neu geladen werden kann.
 * **FR-H-20 (SOLL):** Die Filter-Dropdowns sind per Tastatur bedienbar (`Enter`, `Leertaste`, `Escape`, Pfeiltasten), haben `aria-expanded` und schließen bei Klick außerhalb.
 * **FR-H-21 (MUSS):** Die Filterleiste bleibt beim Scrollen oben sichtbar (`position: sticky`, `top: 0`, ausreichender `z-index`) und überdeckt keine Dialoge.
 
@@ -837,7 +838,7 @@ Die folgenden Kriterien sind verbindlich für die Abnahme. Sie ergänzen die fun
 * **AC-03 – Eintrag löschen:** Given ein Platz ist belegt. When ich „Löschen“ bestätige. Then ist der Platz frei, die Zähler aktualisieren sich und ein Audit-Log-Eintrag entsteht.
 * **AC-04 – Validierung:** Given ich öffne einen freien Platz. When ich einen leeren, zu kurzen oder ungültigen Namen eingebe. Then ist Speichern deaktiviert und eine deutsche Fehlermeldung erscheint.
 * **AC-05 – Konflikt:** Given zwei Personen öffnen denselben freien Platz. When die erste Person speichert und die zweite Person danach speichert. Then sieht die zweite Person eine Konfliktmeldung und der erste Eintrag bleibt erhalten.
-* **AC-06 – Filter:** Given mehrere Schichten und Stände. When ich nach Stand, Schicht und Gruppe filtere. Then werden nur passende Einträge angezeigt; „Zurücksetzen“ stellt alles wieder her.
+* **AC-06 – Filter:** Given mehrere Schichten und Stände. When ich nach Stand, Schicht und Gruppe filtere oder „Freie Plätze“ aktiviere. Then werden nur passende Einträge bzw. nur Stände mit freien Plätzen angezeigt; „Zurücksetzen“ stellt alles wieder her.
 * **AC-07 – Gruppenfilter optional:** Given es existieren keine Gruppen. When ich die Helfer-Ansicht öffne. Then ist der Gruppenfilter ausgeblendet und Stände zeigen „Ohne Gruppe“.
 * **AC-08 – Bedarf 0:** Given ein Stand hat in einer Schicht Bedarf 0. When ich die Helfer-Ansicht öffne. Then wird der Stand in dieser Schicht nicht angezeigt.
 * **AC-09 – Gesamtfortschritt:** Given 10 von 18 Plätzen sind belegt. Then zeigt der Header „10/18“, „8 Helfer fehlen noch“ und einen Fortschrittsbalken von 56 %.

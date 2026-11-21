@@ -21,7 +21,7 @@ Die verbindliche Implementierungsspezifikation steht in
 - Schichtkarten mit ausklappbaren Stand-Blöcken und allen Plätzen
 - Eintragen, Bearbeiten und Löschen ohne Anmeldung
 - Konfliktbehandlung über Firebase-Transaktionen
-- Filter nach Stand, Schicht und Gruppe inklusive URL-Parametern
+- Filter nach Stand, Schicht und Gruppe sowie „Freie Plätze“ inklusive URL-Parametern
 - WhatsApp-Teilen mit kanonischer URL
 - Datenschutzhinweis als Dialog
 - Offline-Banner, Wartezustände und verständliche Fehlermeldungen
